@@ -2,11 +2,11 @@
 
 El despliegue de los contenedores Glances, InfluxDB y Grafana se puede realizar de dos formas:
 
-- [Despliegue manual](#Despliegue manual): Utilizando comandos Docker.
-- [Despliegue automatizado](#Despliegue automatizado): Utilizando Docker-Compose.
+- [Despliegue manual](#manual): Utilizando comandos Docker.
+- [Despliegue automatizado](#auto): Utilizando Docker-Compose.
 
 
-
+<a name="manual"></a>
 ## Despliegue manual
 
 Inicialmente será necesario crear la red a través de la cuál se comunicarán InfluxDB y Grafana:
@@ -77,7 +77,7 @@ docker rm influxdb
 ```
 
 
-
+<a name="auto"></a>
 ## Despliegue automatizado
 
 Para levantar los contenedores de forma automatizada simplemente habrá que ejecutar:

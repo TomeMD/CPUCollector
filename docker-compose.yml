@@ -1,0 +1,50 @@
+version: "3.2"
+
+services:
+  glances:
+    image: nicolargo/glances:latest-full
+    container_name: glances
+    restart: unless-stopped
+    environment:
+      - GLANCES_OPT=-q --export influxdb2 --time 10
+    pid: "host"
+    privileged: true
+    network_mode: "host"
+    depends_on:
+      - influxdb
+    volumes:
+      - ./glances/etc/glances.conf:/glances/conf/glances.conf
+
+  influxdb:
+    image: influxdb
+    build:
+      context: ./influxdb
+    container_name: influxdb
+    restart: unless-stopped
+    ports:
+      - 8086:8086
+    env_file:
+      - ./influxdb/env/influxdb.env
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb2
+      - ./influxdb/etc:/etc/influxdb2
+    networks:
+      - grafana_network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - 8080:3000
+    user: "472"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+    networks:
+      - grafana_network
+
+networks:
+  grafana_network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br_grafana

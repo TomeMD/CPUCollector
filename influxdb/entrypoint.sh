@@ -218,9 +218,8 @@ function setup_influxd () {
     # Function modified to ignore init variables if config already exists
     configs=$(influx config list --hide-headers | perl -lane 'while (/^\**\s+([a-zA-Z0-9]+)\s+.*$/g) {print $1}')
     if [[ "$configs" =~ "${DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME}" ]]; then
-        log warn "config already exists with that name, ignoring DOCKER_INFLUXDB_INIT_* variables"
-        influx config set -a -n ${DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME}
-        return 0
+        log warn "config already exists REMOVING OLD CONFIG"
+        influx config rm ${DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME}
     fi
 
     local -a setup_args=(

@@ -2,7 +2,7 @@
 set -eo pipefail
 
 
-## READ ME
+## READ ME 
 ##
 ## This script handles a few use-cases:
 ##   1. Running arbitrary shell commands other than `influxd`

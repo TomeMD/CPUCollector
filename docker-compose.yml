@@ -2,7 +2,9 @@ version: "3.2"
 
 services:
   glances:
-    image: nicolargo/glances:latest-full
+    image: glances
+    build:
+      context: ./glances
     container_name: glances
     restart: unless-stopped
     environment:

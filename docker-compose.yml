@@ -17,6 +17,17 @@ services:
     volumes:
       - ./glances/etc/glances.conf:/glances/conf/glances.conf
 
+  rapl:
+    image: rapl
+    build:
+      context: ./rapl
+    restart: unless-stopped
+    pid: "host"
+    privileged: true
+    network_mode: "host"
+    depends_on:
+      influxdb
+
   influxdb:
     image: influxdb
     build:

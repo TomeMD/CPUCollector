@@ -17,6 +17,7 @@ SOFTWARE.
 #include <string.h>
 #include <unistd.h>
 #include "papi.h"
+#include <influxdb/influxdb.h>
 
 #define MAX_EVENTS 16
 
@@ -294,6 +295,20 @@ int main (int argc, char **argv) {
 	start_time=PAPI_get_real_nsec();
 	after_time=start_time;
 
+    s_influxdb_client *client = influxdb_client_new("localhost:8086", "admin", "12345678", "glances", 0);
+    int status;
+    s_influxdb_series *out_power_pp0_pkg0 = influxdb_series_create("POWER PACKAGE 0", NULL);
+    s_influxdb_series *out_power_pp0_pkg1 = influxdb_series_create("POWER PACKAGE 1", NULL);
+
+    influxdb_series_add_colums(out_power_pp0_pkg0, "TIME");
+    influxdb_series_add_colums(out_power_pp0_pkg0, "POWER (W)");
+    
+    influxdb_series_add_colums(out_power_pp0_pkg1, "TIME");
+    influxdb_series_add_colums(out_power_pp0_pkg1, "POWER (W)");
+
+    char **tab_pkg0 = malloc(sizeof (char *) * 2);
+    char **tab_pkg1 = malloc(sizeof (char *) * 2);
+
     /* Main loop */
 	while (1) {
 		/* Start counting */
@@ -328,6 +343,10 @@ int main (int argc, char **argv) {
 		fprintf(fff_power_pp0, "%.4f", total_time);
 		fprintf(fff_power_pp1, "%.4f", total_time);
         fprintf(fff_power_uncore_package, "%.4f", total_time);
+
+        char total_time_c[sizeof(total_time)];
+        memcpy(total_time_c,&total_time,sizeof(total_time));
+        tab_pkg0[0] = tab_pkg1[0] = total_time_c; 
         
         for (i=0; i<num_events; i++) {
             /* Energy consumption is returned in nano-Joules (nJ) */
@@ -343,13 +362,19 @@ int main (int argc, char **argv) {
             } else if (strstr(events[i], "PP0_")) {
 					fprintf(fff_energy_pp0, ", %.3f", energy);
 					fprintf(fff_power_pp0, ", %.3f", power);
-                    
+
+                    char power_c[sizeof(power)];
+                    memcpy(power_c,&power,sizeof(power));
+
                     if (strstr(events[i], "PACKAGE0")) {
                         energy_pp0_pkg0 = energy;
                         power_pp0_pkg0 = power;
+
+                        tab_pkg0[1] = power_c; 
                     } else if (strstr(events[i], "PACKAGE1")) {
                         energy_pp0_pkg1 = energy;
                         power_pp0_pkg1 = power;
+                        tab_pkg1[1] = power_c;
                     }
             } else if (strstr(events[i], "PP1_")) {
 					fprintf(fff_energy_pp1, ", %.3f", energy);
@@ -370,6 +395,12 @@ int main (int argc, char **argv) {
                 exit(-1);
 			}
 		}
+
+		influxdb_series_add_points(out_power_pp0_pkg0, tab_pkg0);
+		influxdb_series_add_points(out_power_pp0_pkg1, tab_pkg1);
+    	
+    	status = influxdb_write_serie(client, out_power_pp0_pkg0); //return status != 200;
+    	status = influxdb_write_serie(client, out_power_pp0_pkg1); //return status != 200;
 
 		if (energy_pp0_pkg0 != 0) {
             fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg0 - energy_pp0_pkg0);
@@ -409,6 +440,9 @@ int main (int argc, char **argv) {
 
 	printf("Finished loop. Total running time: %.4f s\n", total_time);
     
+	influxdb_series_free(out_power_pp0_pkg0, NULL);
+	influxdb_series_free(out_power_pp0_pkg1, NULL);
+
     fclose(fff_energy_package);
     fclose(fff_energy_dram);
     fclose(fff_energy_pp0);

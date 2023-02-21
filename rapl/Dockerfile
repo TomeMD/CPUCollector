@@ -14,13 +14,17 @@ COPY --chown=0 src /var/lib/rapl
 
 # Compile PAPI
 RUN cd /var/lib/rapl/papi-6.0.0/src && \
-	./configure --with-components="rapl" && \
-	make
+  chmod +x configure && \
+  ./configure --with-components="rapl" && \
+  make
 
 # Compile RAPL
 RUN cd /var/lib/rapl/rapl_plot && \
-	./install-dependencies.sh && \
-    make clean && make
+  chmod +x install-dependencies.sh && \
+  ./install-dependencies.sh && \
+  make clean && make && \
+  chmod +x /var/lib/rapl/start_rapl.sh
+
 
 # Execute rapl_plot
 ENTRYPOINT ["/var/lib/rapl/start_rapl.sh"]

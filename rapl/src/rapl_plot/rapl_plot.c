@@ -182,6 +182,26 @@ int main (int argc, char **argv) {
 	fff_power_pp1=fopen(output_filename_power_pp1, "w");
     fff_power_uncore_package=fopen(output_filename_power_uncore_package, "w");
 
+
+    // Create InfluxDB Client
+    s_influxdb_client *client = influxdb_client_new("localhost:8086", "admin", "12345678", "glances", 0);
+    //int status;
+
+    // Create InfluxDB series (one per metric)
+    s_influxdb_series *out_energy_package = influxdb_series_create("ENERGY PACKAGE", NULL);
+    s_influxdb_series *out_energy_dram = influxdb_series_create("ENERGY DRAM", NULL);
+    s_influxdb_series *out_energy_pp0 = influxdb_series_create("ENERGY PP0", NULL);
+    s_influxdb_series *out_energy_pp1 = influxdb_series_create("ENERGY PP1", NULL);
+    s_influxdb_series *out_energy_uncore_package = influxdb_series_create("UNCORE ENERGY PACKAGE", NULL);
+    s_influxdb_series *out_power_package = influxdb_series_create("POWER PACKAGE", NULL);
+    s_influxdb_series *out_power_dram = influxdb_series_create("POWER DRAM", NULL);
+    s_influxdb_series *out_power_pp0 = influxdb_series_create("POWER PP0", NULL);
+    s_influxdb_series *out_power_pp1 = influxdb_series_create("POWER PP1", NULL);
+    s_influxdb_series *out_power_uncore_package = influxdb_series_create("UNCORE POWER PACKAGE", NULL);
+
+    //s_influxdb_series *out_power_pp0_pkg0 = influxdb_series_create("POWER PACKAGE 0", NULL);
+    //s_influxdb_series *out_power_pp0_pkg1 = influxdb_series_create("POWER PACKAGE 1", NULL);
+
 	if (fff_energy_package == NULL) {
 		fprintf(stderr, "Could not open fff_energy_package %s\n", output_filename_energy_package);
 		exit(-1);
@@ -222,6 +242,7 @@ int main (int argc, char **argv) {
 		fprintf(stderr, "Could not open fff_power_uncore_package %s\n", output_filename_power_uncore_package);
 		exit(-1);
 	}
+
 	
 	/* Write file headers */
 	fprintf(fff_energy_package, "TIME(s)");
@@ -235,27 +256,59 @@ int main (int argc, char **argv) {
 	fprintf(fff_power_pp1, "TIME(s)");
     fprintf(fff_power_uncore_package, "TIME(s)");
 
+    // Add series headers (columns)
+    influxdb_series_add_colums(out_energy_package, "TIME(s)");
+    influxdb_series_add_colums(out_energy_dram, "TIME(s)");
+    influxdb_series_add_colums(out_energy_pp0, "TIME(s)");
+    influxdb_series_add_colums(out_energy_pp1, "TIME(s)");
+    influxdb_series_add_colums(out_energy_uncore_package, "TIME(s)");
+    influxdb_series_add_colums(out_power_package, "TIME(s)");
+    influxdb_series_add_colums(out_power_dram, "TIME(s)");
+    influxdb_series_add_colums(out_power_pp0, "TIME(s)");
+    influxdb_series_add_colums(out_power_pp1, "TIME(s)");
+    influxdb_series_add_colums(out_power_uncore_package, "TIME(s)");    
+
+    //influxdb_series_add_colums(out_power_pp0_pkg0, "TIME(s)");
+    //influxdb_series_add_colums(out_power_pp0_pkg1, "TIME(s)");
+
+    char column_joules[40];
+    char column_watts[40];
 	for (i=0; i<num_events; i++) {
+		strcpy(column_joules, events[i]);
+		strcat(column_joules, "(J)");
+		strcpy(column_watts, events[i]);
+		strcat(column_watts, "(W)");		
         if (strstr(events[i], "DRAM_")) {
             fprintf(fff_energy_dram,", %s(J)", events[i]);
             fprintf(fff_power_dram,", %s(W)", events[i]);
+            influxdb_series_add_colums(out_energy_dram, column_joules);
+            influxdb_series_add_colums(out_power_dram, column_watts);
         } else if (strstr(events[i], "PP0_")) {
             fprintf(fff_energy_pp0,", %s(J)", events[i]);
             fprintf(fff_power_pp0,", %s(W)", events[i]);
+            influxdb_series_add_colums(out_energy_pp0, column_joules);
+            influxdb_series_add_colums(out_power_pp0, column_watts);
         } else if (strstr(events[i], "PP1_")) {
             fprintf(fff_energy_pp1,", %s(J)", events[i]);
             fprintf(fff_power_pp1,", %s(W)", events[i]);
+            influxdb_series_add_colums(out_energy_pp1, column_joules);
+            influxdb_series_add_colums(out_power_pp1, column_watts);
         } else if (strstr(events[i], "PACKAGE_")) {
             fprintf(fff_energy_package,", %s(J)", events[i]);
             fprintf(fff_power_package,", %s(W)", events[i]);
-            
+            influxdb_series_add_colums(out_energy_package, column_joules);
+            influxdb_series_add_colums(out_power_package, column_watts);
             if (strstr(events[i], "PACKAGE0")) {
                 fprintf(fff_energy_uncore_package,", UNCORE_ENERGY:PACKAGE0(J)");
                 fprintf(fff_power_uncore_package,", UNCORE_POWER:PACKAGE0(W)");
+            	influxdb_series_add_colums(out_energy_uncore_package, ", UNCORE_ENERGY:PACKAGE0(J)");
+            	influxdb_series_add_colums(out_power_uncore_package, ", UNCORE_POWER:PACKAGE0(W)");
             }
             if (strstr(events[i], "PACKAGE1")) {
                 fprintf(fff_energy_uncore_package,", UNCORE_ENERGY:PACKAGE1(J)");
                 fprintf(fff_power_uncore_package,", UNCORE_POWER:PACKAGE1(W)");
+            	influxdb_series_add_colums(out_energy_uncore_package, ", UNCORE_ENERGY:PACKAGE1(J)");
+            	influxdb_series_add_colums(out_power_uncore_package, ", UNCORE_POWER:PACKAGE1(W)");
             }
         } else {
             fprintf(stderr, "Error! Unexpected event %s found!\n", events[i]);
@@ -292,22 +345,11 @@ int main (int argc, char **argv) {
     double energy, power;
     double energy_pp0_pkg0 = 0, power_pp0_pkg0 = 0, energy_pp0_pkg1 = 0, power_pp0_pkg1 = 0;
     double energy_pkg0 = 0, power_pkg0 = 0, energy_pkg1 = 0, power_pkg1 = 0;
+    char **tab_energy = malloc(2*sizeof(char*));
+    char **tab_power = malloc(2*sizeof(char*));
+
 	start_time=PAPI_get_real_nsec();
 	after_time=start_time;
-
-    s_influxdb_client *client = influxdb_client_new("localhost:8086", "admin", "12345678", "glances", 0);
-    int status;
-    s_influxdb_series *out_power_pp0_pkg0 = influxdb_series_create("POWER PACKAGE 0", NULL);
-    s_influxdb_series *out_power_pp0_pkg1 = influxdb_series_create("POWER PACKAGE 1", NULL);
-
-    influxdb_series_add_colums(out_power_pp0_pkg0, "TIME");
-    influxdb_series_add_colums(out_power_pp0_pkg0, "POWER (W)");
-    
-    influxdb_series_add_colums(out_power_pp0_pkg1, "TIME");
-    influxdb_series_add_colums(out_power_pp0_pkg1, "POWER (W)");
-
-    char **tab_pkg0 = malloc(sizeof (char *) * 2);
-    char **tab_pkg1 = malloc(sizeof (char *) * 2);
 
     /* Main loop */
 	while (1) {
@@ -344,45 +386,48 @@ int main (int argc, char **argv) {
 		fprintf(fff_power_pp1, "%.4f", total_time);
         fprintf(fff_power_uncore_package, "%.4f", total_time);
 
-        char total_time_c[sizeof(total_time)];
-        memcpy(total_time_c,&total_time,sizeof(total_time));
-        tab_pkg0[0] = tab_pkg1[0] = total_time_c; 
-        
+        memcpy(tab_energy[0],&total_time,sizeof(total_time));
+        memcpy(tab_power[0],&total_time,sizeof(total_time));
+
         for (i=0; i<num_events; i++) {
             /* Energy consumption is returned in nano-Joules (nJ) */
             energy = ((double)values[i] / 1.0e9);
             power = energy / elapsed_time;
-            
+
+            memcpy(tab_energy[1],&energy,sizeof(energy));
+			memcpy(tab_power[1],&power,sizeof(power));
+
             //printf("events[%i]=%s, values[%i]=%lli\n", i, events[i], i, values[i]);
             //printf("Energy %.3f, Power %.3f\n", energy, power);
 
             if (strstr(events[i], "DRAM_")) {
                 fprintf(fff_energy_dram, ", %.3f", energy);
                 fprintf(fff_power_dram, ", %.3f", power);
+                influxdb_series_add_points(out_energy_dram, tab_energy);
+				influxdb_series_add_points(out_power_dram, tab_power);
             } else if (strstr(events[i], "PP0_")) {
 					fprintf(fff_energy_pp0, ", %.3f", energy);
 					fprintf(fff_power_pp0, ", %.3f", power);
-
-                    char power_c[sizeof(power)];
-                    memcpy(power_c,&power,sizeof(power));
+					influxdb_series_add_points(out_energy_pp0, tab_energy);
+					influxdb_series_add_points(out_power_pp0, tab_power);
 
                     if (strstr(events[i], "PACKAGE0")) {
                         energy_pp0_pkg0 = energy;
-                        power_pp0_pkg0 = power;
-
-                        tab_pkg0[1] = power_c; 
+                        power_pp0_pkg0 = power; 
                     } else if (strstr(events[i], "PACKAGE1")) {
                         energy_pp0_pkg1 = energy;
                         power_pp0_pkg1 = power;
-                        tab_pkg1[1] = power_c;
                     }
             } else if (strstr(events[i], "PP1_")) {
 					fprintf(fff_energy_pp1, ", %.3f", energy);
 					fprintf(fff_power_pp1, ", %.3f", power);
+                	influxdb_series_add_points(out_energy_pp1, tab_energy);
+					influxdb_series_add_points(out_power_pp1, tab_power);
             } else if (strstr(events[i], "PACKAGE_")) {
 					fprintf(fff_energy_package, ", %.3f", energy);
 					fprintf(fff_power_package, ", %.3f", power);
-
+                	influxdb_series_add_points(out_energy_package, tab_energy);
+					influxdb_series_add_points(out_power_package, tab_power);
                     if (strstr(events[i], "PACKAGE0")) {
                         energy_pkg0 = energy;
                         power_pkg0 = power;
@@ -396,21 +441,43 @@ int main (int argc, char **argv) {
 			}
 		}
 
-		influxdb_series_add_points(out_power_pp0_pkg0, tab_pkg0);
-		influxdb_series_add_points(out_power_pp0_pkg1, tab_pkg1);
-    	
-    	status = influxdb_write_serie(client, out_power_pp0_pkg0); //return status != 200;
-    	status = influxdb_write_serie(client, out_power_pp0_pkg1); //return status != 200;
+    	influxdb_write_serie(client, out_energy_package);
+    	influxdb_write_serie(client, out_energy_dram);
+    	influxdb_write_serie(client, out_energy_pp0);
+    	influxdb_write_serie(client, out_energy_pp1);
+    	influxdb_write_serie(client, out_power_package);
+    	influxdb_write_serie(client, out_power_dram);
+    	influxdb_write_serie(client, out_power_pp0);
+    	influxdb_write_serie(client, out_power_pp1); //return status != 200;
+
+    	float uncore_energy, uncore_power;
 
 		if (energy_pp0_pkg0 != 0) {
             fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg0 - energy_pp0_pkg0);
             fprintf(fff_power_uncore_package, ", %.3f", power_pkg0 - power_pp0_pkg0);
+
+            uncore_energy = energy_pkg0 - energy_pp0_pkg0;
+            uncore_power = power_pkg0 - power_pp0_pkg0;
+            memcpy(tab_energy[1],&uncore_energy,sizeof(uncore_energy));
+			memcpy(tab_power[1],&uncore_power,sizeof(uncore_power));
+            influxdb_series_add_points(out_energy_uncore_package, tab_energy);
+			influxdb_series_add_points(out_power_uncore_package, tab_power);
         }
-        
+
         if (energy_pp0_pkg1 != 0) {
             fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg1 - energy_pp0_pkg1);
             fprintf(fff_power_uncore_package, ", %.3f", power_pkg1 - power_pp0_pkg1);
+
+            uncore_energy = energy_pkg1 - energy_pp0_pkg1;
+            uncore_power = power_pkg1 - power_pp0_pkg1;
+            memcpy(tab_energy[1],&uncore_energy,sizeof(uncore_energy));
+			memcpy(tab_power[1],&uncore_power,sizeof(uncore_power));
+            influxdb_series_add_points(out_energy_uncore_package, tab_energy);
+			influxdb_series_add_points(out_power_uncore_package, tab_power);
         }
+        
+        influxdb_write_serie(client, out_energy_uncore_package);
+        influxdb_write_serie(client, out_power_uncore_package);
         
         fprintf(fff_energy_package, "\n");
         fprintf(fff_energy_dram, "\n");
@@ -440,8 +507,16 @@ int main (int argc, char **argv) {
 
 	printf("Finished loop. Total running time: %.4f s\n", total_time);
     
-	influxdb_series_free(out_power_pp0_pkg0, NULL);
-	influxdb_series_free(out_power_pp0_pkg1, NULL);
+	influxdb_series_free(out_energy_package, NULL);
+    influxdb_series_free(out_energy_dram, NULL);
+    influxdb_series_free(out_energy_pp0, NULL);
+    influxdb_series_free(out_energy_pp1, NULL);
+    influxdb_series_free(out_energy_uncore_package, NULL);
+    influxdb_series_free(out_power_package, NULL);
+    influxdb_series_free(out_power_dram, NULL);
+    influxdb_series_free(out_power_pp0, NULL);
+    influxdb_series_free(out_power_pp1, NULL);
+    influxdb_series_free(out_power_uncore_package, NULL); 
 
     fclose(fff_energy_package);
     fclose(fff_energy_dram);

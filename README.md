@@ -15,7 +15,15 @@ Inicialmente será necesario crear la red a través de la cuál se comunicarán 
 docker network create -d bridge --opt com.docker.network.bridge.name=br_grafana grafana_network
 ```
 
-Y crear una imagen personalizada a partir de la imagen de InfluxDB oficial:
+Y crear una imagen para los contenedores para los que sea necesario, en este caso, los contenedores RAPL, Glances e InfluxDB:
+
+```shell
+docker build -t rapl ./rapl
+```
+
+```shell
+docker build -t glances ./glances
+```
 
 ```shell
 docker build -t influxdb ./influxdb
@@ -52,17 +60,23 @@ docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v $PW
 
 
 
-**Por último, se levanta el contenedor Glances**
+**Por último, se levantan los contenedores Glances y RAPL:**
 
+Glances:
 ```shell
 docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 10" -v $PWD/glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
 ```
 
+RAPL:
+```shell
+docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl
+```
 
 
 Una vez desplegados, si se quieren parar los contenedores:
 
 ```shell
+docker stop rapl
 docker stop glances
 docker stop grafana
 docker stop influxdb
@@ -71,6 +85,7 @@ docker stop influxdb
 Una vez parados, si se quiere eliminar los contenedores de forma permanente:
 
 ```shell
+docker rm rapl
 docker rm glances
 docker rm grafana
 docker rm influxdb

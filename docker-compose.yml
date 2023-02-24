@@ -26,7 +26,7 @@ services:
     privileged: true
     network_mode: "host"
     depends_on:
-      influxdb
+      - influxdb
 
   influxdb:
     image: influxdb

@@ -29,7 +29,7 @@ services:
       - influxdb
 
   influxdb:
-    image: influxdb
+    image: myinfluxdb
     build:
       context: ./influxdb
     container_name: influxdb

@@ -26,7 +26,7 @@ docker build -t glances ./glances
 ```
 
 ```shell
-docker build -t influxdb ./influxdb
+docker build -t myinfluxdb ./influxdb
 ```
 
 Tras ello, se inician los contenedores de forma ordenada.
@@ -47,7 +47,7 @@ docker run -d --name influxdb -p 8086:8086 --restart=unless-stopped \
 					-e "DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME=MyConfig" \
 					-v $PWD/influxdb/data:/var/lib/influxdb2 \
 					-v $PWD/influxdb/etc:/etc/influxdb2 \
-					--network grafana_network influxdb
+					--network grafana_network myinfluxdb
 ```
 
 

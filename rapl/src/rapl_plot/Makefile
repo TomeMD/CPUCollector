@@ -4,8 +4,8 @@ LFLAGS =
 
 INFLUXDB_INCLUDE=/usr/local/include/influxdb/
 
-PAPI_INCLUDE = ../papi-6.0.0/src
-PAPI_LIBRARY = ../papi-6.0.0/src/libpapi.a
+PAPI_INCLUDE = ../papi-${PAPI_VERSION}/src
+PAPI_LIBRARY = ../papi-${PAPI_VERSION}/src/libpapi.a
 
 all:	rapl_plot
 

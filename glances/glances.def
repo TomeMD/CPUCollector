@@ -4,5 +4,8 @@ From: nicolargo/glances:latest-full
 %files
 	etc/glances.conf /glances/conf/glances.conf
 
+%startscript
+	python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+
 %runscript
 	python -m glances -C /glances/conf/glances.conf $GLANCES_OPT

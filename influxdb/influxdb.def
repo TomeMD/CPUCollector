@@ -11,6 +11,8 @@ From: influxdb:latest
 
 %startscript
   /entrypoint.sh
+  influxd
 
 %runscript
-  influxd
+  /entrypoint.sh
+  influxd 

@@ -110,13 +110,13 @@ docker-compose up -d
 Para parar los contenedores:
 
 ```shell
-docker compose stop
+docker-compose stop
 ```
 
 Para parar y eliminar los contenedores:
 
 ```shell
-docker compose down
+docker-compose down
 ```
 
 <a name="apptainer"></a>

@@ -10,7 +10,7 @@ From: influxdb:latest
   entrypoint.sh /entrypoint.sh
 
 %startscript
-  ./entrypoint.sh
+  /entrypoint.sh
 
 %runscript
   influxd

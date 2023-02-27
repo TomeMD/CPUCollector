@@ -64,7 +64,7 @@ docker run -d --name influxdb -p 8086:8086 --restart=unless-stopped \
 Ahora se levanta el contenedor Grafana:
 
 ```shell
-docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v $PWD/grafana/data:/var/lib/grafana --network grafana_network grafana/grafana
+docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v $PWD/grafana/data:/var/lib/grafana -v $PWD/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources --network grafana_network grafana/grafana
 ```
 
 Por último, se levantan los contenedores Glances y RAPL:
@@ -194,11 +194,11 @@ apptainer instance stop influxdb
 Para levantar las instancias de forma automatizada habrá que ejecutar:
 
 ```shell
-
+singularity-compose up
 ```
 
 Para parar y eliminar las instancias:
 
 ```shell
-
+singularity-compose down
 ```

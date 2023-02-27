@@ -1,0 +1,59 @@
+version: "2.0"
+
+instances:
+  glances:
+    build:
+      context: ./glances
+      recipe: glances.def
+      options:
+        - fakeroot
+    volumes:
+      - ./glances/etc/glances.conf:/glances/conf/glances.conf
+    run:
+      background: true
+      options:
+        - C
+        - fakeroot
+        - "env=GLANCES_OPT=-q --export influxdb2 --time 10"
+    depends_on:
+      - influxdb
+
+  rapl:
+    image: rapl
+    build:
+      context: ./rapl
+      recipe: rapl.def
+      options:
+        - fakeroot
+    run:
+      background: true
+      options:
+        - C
+        - fakeroot
+    depends_on:
+      - influxdb
+
+  influxdb:
+    build:
+      context: ./influxdb
+      recipe: influxdb.def
+    ports:
+      - 8086:8086
+    volumes:
+      - ./influxdb/data:/var/lib/influxdb2
+      - ./influxdb/etc:/etc/influxdb2
+    run:
+      background: true
+      options:
+        - "env_file=./influxdb/env/influxdb.env"
+
+  grafana:
+    image: docker://grafana/grafana
+    ports:
+      - 8080:3000
+    #user: "472"
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    run:
+      background: true

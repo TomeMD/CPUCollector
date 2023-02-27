@@ -1,0 +1,37 @@
+Bootstrap: docker
+From: ubuntu:latest
+
+# Set environment variables
+%environment 
+  export RAPL_OUTPUT_PREFIX=out
+  export RAPL_SECONDS_INTERVAL=2
+
+# Install basic packages
+%post
+  export PAPI_VERSION=6.0.0
+  apt-get update
+  apt-get install -y build-essential gcc libcap2-bin git
+  mkdir -p /var/lib/rapl
+
+# Copy RAPL binaries and PAPI distribution
+%files
+  src /var/lib/rapl
+
+# Compile PAPI
+%post
+  cd /var/lib/rapl/papi-6.0.0/src
+  chmod +x configure
+  ./configure --with-components="rapl"
+  make
+
+# Compile RAPL
+%post
+  cd /var/lib/rapl/rapl_plot
+  chmod +x install-dependencies.sh
+  ./install-dependencies.sh
+  make clean && make
+  chmod +x /var/lib/rapl/start_rapl.sh
+
+# Execute rapl_plot
+%runscript
+  ./var/lib/rapl/start_rapl.sh

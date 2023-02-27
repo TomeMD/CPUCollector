@@ -62,8 +62,6 @@ docker run -d --name influxdb -p 8086:8086 --restart=unless-stopped \
 docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v $PWD/grafana/data:/var/lib/grafana --network grafana_network grafana/grafana
 ```
 
-
-
 **Por último, se levantan los contenedores Glances y RAPL:**
 
 Glances:
@@ -95,7 +93,7 @@ docker rm grafana
 docker rm influxdb
 ```
 
-
+---
 <a name="auto"></a>
 ## Despliegue automatizado
 
@@ -122,20 +120,14 @@ docker compose down
 
 El despliegue de los contenedores Glances, InfluxDB y Grafana se puede realizar de dos formas:
 
-- [Despliegue manual](#manual): Utilizando comandos Docker.
-- [Despliegue automatizado](#auto): Utilizando Docker-Compose.
+- [Despliegue manual](#manual): Utilizando comandos Apptainer.
+- [Despliegue automatizado](#auto): Utilizando Singularity-Compose.
 
 ---
 <a name="manual"></a>
 ### Despliegue manual
 
-Inicialmente será necesario crear la red a través de la cuál se comunicarán InfluxDB y Grafana:
-
-```shell
-
-```
-
-Y crear una imagen (fichero .sif) para cada contenedor:
+Inicialmente será necesario crear una imagen (fichero .sif) para los contenedores para los que sea necesario, en este caso, los contenedores RAPL, Glances e InfluxDB:
 
 ```shell
 apptainer build rapl/rapl.sif rapl/rapl.def
@@ -149,72 +141,53 @@ apptainer build glances/glances.sif glances/glances.def
 apptainer build influxdb/influxdb.sif influxdb/influxdb.def
 ```
 
-```shell
-apptainer build grafana/grafana.sif grafana/grafana.def
-```
 
-Tras ello, se inician los contenedores de forma ordenada.
+Para iniciar la ejecución de los contenedores en segundo plano debemos crear una instancia para cada contenedor.
 
-
-
-**En primer lugar, se levanta el contenedor InfluxDB**:
+**En primer lugar, se levanta la instancia InfluxDB**:
 
 ```shell
-
+apptainer instance start --env "DOCKER_INFLUXDB_INIT_MODE=setup" --env "DOCKER_INFLUXDB_INIT_USERNAME=root" --env "DOCKER_INFLUXDB_INIT_PASSWORD=MyPassword" --env "DOCKER_INFLUXDB_INIT_ORG=tomemd" --env "DOCKER_INFLUXDB_INIT_BUCKET=glances" --env "DOCKER_INFLUXDB_INIT_RETENTION=4w" --env "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=MyToken" --env "DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME=MyConfig" --bind ./influxdb/data:/var/lib/influxdb2 --bind ./influxdb/etc:/etc/influxdb2 influxdb/influxdb.sif influxdb
 ```
 
-
-
-**Ahora se levanta el contenedor Grafana:**
+**Ahora se levanta la instancia Grafana:**
 
 ```shell
-
+apptainer instance start --bind ./grafana/data:/var/lib/grafana docker://grafana/grafana grafana
 ```
 
-
-
-**Por último, se levantan los contenedores Glances y RAPL:**
+**Por último, se levantan las instancias Glances y RAPL:**
 
 Glances:
 ```shell
-
+apptainer instance start -C --env "GLANCES_OPT=-q --export influxdb2 --time 10" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
 ```
-
+-v $PWD/glances/etc/glances.conf:/glances/conf/glances.conf
 RAPL:
 ```shell
-
+apptainer instance start -C --add-caps rapl/rapl.sif rapl
 ```
 
-
-Una vez desplegados, si se quieren parar los contenedores:
+Una vez desplegadas, si se quieren parar y eliminar las instancias:
 
 ```shell
-
+apptainer instance stop rapl
+apptainer instance stop glances
+apptainer instance stop grafana
+apptainer instance stop influxdb
 ```
 
-Una vez parados, si se quiere eliminar los contenedores de forma permanente:
-
-```shell
-
-```
-
-
+---
 <a name="auto"></a>
 ## Despliegue automatizado
 
-Para levantar los contenedores de forma automatizada simplemente habrá que ejecutar:
+Para levantar las instancias de forma automatizada habrá que ejecutar:
 
 ```shell
 
 ```
 
-Para parar los contenedores:
-
-```shell
-
-```
-
-Para parar y eliminar los contenedores:
+Para parar y eliminar las instancias:
 
 ```shell
 

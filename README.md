@@ -1,13 +1,17 @@
 # Instrucciones de ejecución
+En función de nuestras preferencias, podemos desplegar los contenedores utilizando [Docker](#docker) o utilizando [Apptainer](#apptainer).
+
+<a name="docker"></a>
+## Despliegue con Docker
 
 El despliegue de los contenedores Glances, InfluxDB y Grafana se puede realizar de dos formas:
 
 - [Despliegue manual](#manual): Utilizando comandos Docker.
 - [Despliegue automatizado](#auto): Utilizando Docker-Compose.
 
-
+---
 <a name="manual"></a>
-## Despliegue manual
+### Despliegue manual
 
 Inicialmente será necesario crear la red a través de la cuál se comunicarán InfluxDB y Grafana:
 
@@ -113,3 +117,105 @@ Para parar y eliminar los contenedores:
 docker compose down
 ```
 
+<a name="apptainer"></a>
+## Despliegue con Apptainer
+
+El despliegue de los contenedores Glances, InfluxDB y Grafana se puede realizar de dos formas:
+
+- [Despliegue manual](#manual): Utilizando comandos Docker.
+- [Despliegue automatizado](#auto): Utilizando Docker-Compose.
+
+---
+<a name="manual"></a>
+### Despliegue manual
+
+Inicialmente será necesario crear la red a través de la cuál se comunicarán InfluxDB y Grafana:
+
+```shell
+
+```
+
+Y crear una imagen (fichero .sif) para cada contenedor:
+
+```shell
+apptainer build rapl/rapl.sif rapl/rapl.def
+```
+
+```shell
+apptainer build glances/glances.sif glances/glances.def
+```
+
+```shell
+apptainer build influxdb/influxdb.sif influxdb/influxdb.def
+```
+
+```shell
+apptainer build grafana/grafana.sif grafana/grafana.def
+```
+
+Tras ello, se inician los contenedores de forma ordenada.
+
+
+
+**En primer lugar, se levanta el contenedor InfluxDB**:
+
+```shell
+
+```
+
+
+
+**Ahora se levanta el contenedor Grafana:**
+
+```shell
+
+```
+
+
+
+**Por último, se levantan los contenedores Glances y RAPL:**
+
+Glances:
+```shell
+
+```
+
+RAPL:
+```shell
+
+```
+
+
+Una vez desplegados, si se quieren parar los contenedores:
+
+```shell
+
+```
+
+Una vez parados, si se quiere eliminar los contenedores de forma permanente:
+
+```shell
+
+```
+
+
+<a name="auto"></a>
+## Despliegue automatizado
+
+Para levantar los contenedores de forma automatizada simplemente habrá que ejecutar:
+
+```shell
+
+```
+
+Para parar los contenedores:
+
+```shell
+
+```
+
+Para parar y eliminar los contenedores:
+
+```shell
+
+```

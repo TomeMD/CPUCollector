@@ -138,7 +138,7 @@ En primer lugar se crearán las imágenes y, tras ello, se ejecutarán las insta
 Inicialmente será necesario crear una imagen (fichero .sif) para los contenedores para los que sea necesario, en este caso, los contenedores RAPL, Glances e InfluxDB:
 
 ```shell
-apptainer build rapl/rapl.sif rapl/rapl.def
+apptainer build rapl.sif rapl.def
 ```
 
 ```shell
@@ -157,7 +157,7 @@ Para iniciar la ejecución de los contenedores en segundo plano debemos crear un
 En primer lugar, se levanta la instancia InfluxDB:
 
 ```shell
-apptainer instance start --env "DOCKER_INFLUXDB_INIT_MODE=setup" --env "DOCKER_INFLUXDB_INIT_USERNAME=root" --env "DOCKER_INFLUXDB_INIT_PASSWORD=MyPassword" --env "DOCKER_INFLUXDB_INIT_ORG=tomemd" --env "DOCKER_INFLUXDB_INIT_BUCKET=glances" --env "DOCKER_INFLUXDB_INIT_RETENTION=4w" --env "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=MyToken" --env "DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME=MyConfig" --bind ./influxdb/data:/var/lib/influxdb2 --bind ./influxdb/etc:/etc/influxdb2 influxdb/influxdb.sif influxdb
+apptainer instance start --env-file influxdb/env/influxdb.env --bind ./influxdb/data:/var/lib/influxdb2 --bind ./influxdb/etc:/etc/influxdb2 influxdb/influxdb.sif influxdb
 ```
 
 Ahora se levanta la instancia Grafana:
@@ -175,7 +175,7 @@ apptainer instance start -C --env "GLANCES_OPT=-q --export influxdb2 --time 10" 
 
 RAPL:
 ```shell
-apptainer instance start -C --add-caps rapl/rapl.sif rapl
+apptainer instance start --no-mount tmp --writable-tmpfs --add-caps cap_setfcap rapl.sif rapl
 ```
 
 Una vez desplegadas, si se quieren parar y eliminar las instancias:

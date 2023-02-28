@@ -34,7 +34,7 @@ From: ubuntu:latest
 
 # Execute rapl_plot
 %startscript
-  /var/lib/rapl/start_rapl.sh
+  /var/lib/rapl/start_rapl_apptainer.sh
   
 %runscript
-  /var/lib/rapl/start_rapl.sh
+  /var/lib/rapl/start_rapl_apptainer.sh

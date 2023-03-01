@@ -23,7 +23,7 @@ SOFTWARE.
 
 int main (int argc, char **argv) {
 	int retval,cid,rapl_cid=-1,numcmp;
-    int i,code,enum_retval,seconds_interval,microseconds_interval,max_time = 0;
+    int i,code,enum_retval,seconds_interval,microseconds_interval,max_time;
     int num_events = 0;
     int EventSet = PAPI_NULL;
 	long long values[MAX_EVENTS];
@@ -32,20 +32,37 @@ int main (int argc, char **argv) {
 	const PAPI_component_info_t *cmpinfo = NULL;
 	long long start_time,before_time,after_time,offset_time;
 	double elapsed_time,total_time;
+    size_t array_length;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
-
+    char* arg_filename;
     FILE *fff_energy_package, *fff_energy_dram, *fff_energy_pp0, *fff_energy_pp1, *fff_energy_uncore_package;
     FILE *fff_power_package, *fff_power_dram, *fff_power_pp0, *fff_power_pp1, *fff_power_uncore_package;
 
-	if (argc < 3) {
-		fprintf(stderr, "Usage: %s OUTPUT_PREFIX INTERVAL_SECONDS [MAX_TIME_SECONDS]\n", argv[0]);
-		exit(-1);
-	}
+    seconds_interval = 1;
+    max_time = 0;
 
-    char* arg_filename = argv[1];
-	size_t array_length = strlen(arg_filename)+50;
-	char output_filename_energy_package[array_length], 
+    if (argc == 1) {
+	char *prefix = "out";
+	arg_filename = (char*)malloc(strlen(prefix)+1);
+	sprintf(arg_filename, "%s", prefix);
+    } else if (argc == 2) {
+        arg_filename = argv[1];
+    } else if (argc == 3) {
+        arg_filename = argv[1];
+	sscanf(argv[2], "%i", &seconds_interval);
+    } else if (argc == 4) {
+        arg_filename = argv[1];
+	sscanf(argv[2], "%i", &seconds_interval);
+        sscanf(argv[3], "%i", &max_time);
+    } else {
+	fprintf(stderr, "Usage: %s OUTPUT_PREFIX INTERVAL_SECONDS [MAX_TIME_SECONDS]\n", argv[0]);
+	exit(-1);
+    }
+
+    microseconds_interval = seconds_interval * 1e6;
+    array_length = strlen(arg_filename)+50;
+    char output_filename_energy_package[array_length], 
     output_filename_energy_dram[array_length], 
     output_filename_energy_pp0[array_length], 
     output_filename_energy_pp1[array_length],
@@ -67,16 +84,9 @@ int main (int argc, char **argv) {
 	sprintf(output_filename_power_pp1, "%s_power_pp1.csv", arg_filename);
     sprintf(output_filename_power_uncore_package, "%s_power_uncore_package.csv", arg_filename);
 
-	sscanf(argv[2], "%i", &seconds_interval);
-	microseconds_interval = seconds_interval * 1e6;
-
     printf("Output prefix: %s\n", arg_filename);
     printf("Interval: %i s (%i us)\n", seconds_interval, microseconds_interval);
-
-    if (argc == 4) {
-        sscanf(argv[3], "%i", &max_time);
-        printf("Max time: %i s\n", max_time);
-    }
+    printf("Max time: %i s\n", max_time);
     
 	/* PAPI Initialization */
 	retval = PAPI_library_init( PAPI_VER_CURRENT );

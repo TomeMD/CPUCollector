@@ -175,7 +175,8 @@ apptainer instance start -C --env "GLANCES_OPT=-q --export influxdb2 --time 10" 
 
 RAPL:
 ```shell
-apptainer instance start --no-mount tmp --writable-tmpfs --add-caps cap_setfcap rapl.sif rapl
+#apptainer instance start --no-mount tmp --writable-tmpfs --add-caps cap_setfcap rapl.sif rapl
+apptainer instance start rapl.sif rapl
 ```
 
 Una vez desplegadas, si se quieren parar y eliminar las instancias:

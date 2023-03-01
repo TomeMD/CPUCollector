@@ -385,16 +385,16 @@ int main (int argc, char **argv) {
 		fprintf(fff_power_pp1, "%.4f", total_time);
         fprintf(fff_power_uncore_package, "%.4f", total_time);
 
-        memcpy(tab_energy[0],&total_time,sizeof(total_time));
-        memcpy(tab_power[0],&total_time,sizeof(total_time));
+		tab_energy[0] = (char *) &total_time;
+		tab_power[0] = (char *) &total_time;
 
         for (i=0; i<num_events; i++) {
             /* Energy consumption is returned in nano-Joules (nJ) */
             energy = ((double)values[i] / 1.0e9);
             power = energy / elapsed_time;
 
-            memcpy(tab_energy[1],&energy,sizeof(energy));
-			memcpy(tab_power[1],&power,sizeof(power));
+			tab_energy[1] = (char *) &energy;
+			tab_power[1] = (char *) &power;
 
             //printf("events[%i]=%s, values[%i]=%lli\n", i, events[i], i, values[i]);
             //printf("Energy %.3f, Power %.3f\n", energy, power);

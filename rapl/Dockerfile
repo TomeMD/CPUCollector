@@ -22,7 +22,10 @@ RUN cd /var/lib/rapl/papi-${PAPI_VERSION}/src && \
 RUN cd /var/lib/rapl/rapl_plot && \
   chmod +x install-dependencies.sh && \
   ./install-dependencies.sh && \
-  make clean && make && \
+  make && \
+  cp /var/lib/rapl/rapl_plot/rapl_plot /tmp/rapl_plot && \
+  setcap cap_sys_rawio=ep /tmp/rapl_plot && \
+  chmod +x /tmp/rapl_plot && \
   chmod +x /var/lib/rapl/start_rapl.sh
 
 # Execute rapl_plot

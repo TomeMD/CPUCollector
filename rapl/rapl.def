@@ -2,7 +2,7 @@ Bootstrap: docker
 From: ubuntu:latest
 
 # Set environment variables
-%environment 
+%environment
   export RAPL_OUTPUT_PREFIX=out
   export RAPL_SECONDS_INTERVAL=2
 
@@ -29,12 +29,16 @@ From: ubuntu:latest
   cd /var/lib/rapl/rapl_plot
   chmod +x install-dependencies.sh
   ./install-dependencies.sh
-  make clean && make
+  make
+  cp --preserve=all /var/lib/rapl/rapl_plot/rapl_plot /tmp/rapl_plot
+  setcap cap_sys_rawio=ep /tmp/rapl_plot
+  chmod +x /tmp/rapl_plot
   chmod +x /var/lib/rapl/start_rapl.sh
+
 
 # Execute rapl_plot
 %startscript
-  /var/lib/rapl/start_rapl_apptainer.sh
-  
+  /var/lib/rapl/start_rapl.sh
+
 %runscript
-  /var/lib/rapl/start_rapl_apptainer.sh
+  /var/lib/rapl/start_rapl.sh

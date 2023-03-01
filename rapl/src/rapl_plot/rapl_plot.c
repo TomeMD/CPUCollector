@@ -312,7 +312,6 @@ int main (int argc, char **argv) {
             }
         } else {
             fprintf(stderr, "Error! Unexpected event %s found!\n", events[i]);
-            exit(1);
         }
 	}
 
@@ -437,7 +436,6 @@ int main (int argc, char **argv) {
                     }
             } else {
                 fprintf(stderr, "Error! Unexpected event %s found!\n", events[i]);
-                exit(-1);
 			}
 		}
 

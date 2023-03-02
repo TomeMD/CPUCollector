@@ -1,18 +1,21 @@
-FROM ubuntu:jammy
+FROM debian:bullseye-slim AS base
+
+RUN apt-get update && apt-get install -y sudo libcap2-bin libcurl3-gnutls
+
+FROM base AS builder
 
 # Set environment variables
-ENV PAPI_VERSION=6.0.0
+ENV PAPI_VERSION=7.0.0
 ENV RAPL_HOME=/var/lib/rapl
 ENV PAPI_HOME=${RAPL_HOME}/papi-${PAPI_VERSION}
 ENV RAPL_SRC=/var/lib/rapl/rapl_plot
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 
 # Install basic packages
-RUN apt-get update && apt-get install -y build-essential gcc libcap2-bin git
+RUN apt-get install -y build-essential gcc git
 
-# Copy RAPL binaries and PAPI distribution
+# Copy PAPI source code
 RUN mkdir -p ${RAPL_HOME}
-COPY --chown=0 src ${RAPL_HOME}
+COPY --chown=0 ./src/papi-${PAPI_VERSION} ${PAPI_HOME}
 
 # Compile PAPI
 RUN cd ${PAPI_HOME}/src && \
@@ -20,13 +23,22 @@ RUN cd ${PAPI_HOME}/src && \
   ./configure --with-components="rapl" && \
   make
 
-# Compile RAPL
-RUN cd ${RAPL_SRC} && \
+# Compile RAPL dependencies
+COPY --chown=0 ./src/install-dependencies.sh ${RAPL_HOME}
+RUN cd ${RAPL_HOME} && \
   chmod +x install-dependencies.sh && \
-  ./install-dependencies.sh && \
+  ./install-dependencies.sh
+
+# Compile RAPL tool
+COPY --chown=0 ./src/rapl_plot ${RAPL_SRC}
+RUN cd ${RAPL_SRC} && \
   make && \
   setcap cap_sys_rawio=ep ${RAPL_SRC}/rapl_plot && \
   chmod +x ${RAPL_SRC}/rapl_plot
 
+FROM base
+
+WORKDIR /usr/local/bin
+COPY --from=builder /var/lib/rapl/rapl_plot/rapl_plot ./
 # Execute rapl_plot
-ENTRYPOINT ["/var/lib/rapl/rapl_plot/rapl_plot"]
+ENTRYPOINT ["rapl_plot"]

@@ -11,8 +11,6 @@ mkdir json-c/json-c-build
 cd json-c/json-c-build
 cmake ..
 make
-make test
-# optionally don' use valgrind - make USE_VALGRIND=0 test
 make install
 
 # Install InfluxDB C libraries

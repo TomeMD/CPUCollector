@@ -379,7 +379,7 @@ int main (int argc, char **argv) {
     fflush(stdout);
     fflush(stderr);
     
-    double energy, power;
+    double energy, power, uncore_energy, uncore_power;
     double energy_pp0_pkg0 = 0, power_pp0_pkg0 = 0, energy_pp0_pkg1 = 0, power_pp0_pkg1 = 0;
     double energy_pkg0 = 0, power_pkg0 = 0, energy_pkg1 = 0, power_pkg1 = 0;
     char **tab_energy = malloc(2*sizeof(char*));
@@ -390,43 +390,47 @@ int main (int argc, char **argv) {
 
     /* Main loop */
     while (1) {
-		/* Start counting */
-		before_time=PAPI_get_real_nsec();
-		retval = PAPI_start(EventSet);
-		if (retval != PAPI_OK) {
-			fprintf(stderr, "PAPI_start() failed\n");
-			exit(-1);
-		}
+	/* Start counting */
+	before_time=PAPI_get_real_nsec();
+	retval = PAPI_start(EventSet);
+	if (retval != PAPI_OK) {
+		fprintf(stderr, "PAPI_start() failed\n");
+		exit(-1);
+	}
 
-		offset_time=(PAPI_get_real_nsec() - after_time)/1000 + 50;
-		usleep(microseconds_interval - offset_time);
+	offset_time=(PAPI_get_real_nsec() - after_time)/1000 + 50;
+	usleep(microseconds_interval - offset_time);
 
-		/* Stop counting */
-		after_time=PAPI_get_real_nsec();
-		retval = PAPI_stop(EventSet, values);
-		if (retval != PAPI_OK) {
-			fprintf(stderr, "PAPI_stop() failed\n");
-            		exit(-1);
-		}
+	/* Stop counting */
+	after_time=PAPI_get_real_nsec();
+	retval = PAPI_stop(EventSet, values);
+	if (retval != PAPI_OK) {
+		fprintf(stderr, "PAPI_stop() failed\n");
+           		exit(-1);
+	}
 
-		total_time=((double)(after_time-start_time))/1.0e9;
-		elapsed_time=((double)(after_time-before_time))/1.0e9;
+	total_time=((double)(after_time-start_time))/1.0e9;
+	elapsed_time=((double)(after_time-before_time))/1.0e9;
 
-		fprintf(fff_energy_package, "%.4f", total_time);
-		fprintf(fff_energy_dram, "%.4f", total_time);
-		fprintf(fff_energy_pp0, "%.4f", total_time);
-		fprintf(fff_energy_pp1, "%.4f", total_time);
-        	fprintf(fff_energy_uncore_package, "%.4f", total_time);
-	        fprintf(fff_energy_psys, "%.4f", total_time);
-		fprintf(fff_power_package, "%.4f", total_time);
-		fprintf(fff_power_dram, "%.4f", total_time);
-		fprintf(fff_power_pp0, "%.4f", total_time);
-		fprintf(fff_power_pp1, "%.4f", total_time);
-        	fprintf(fff_power_uncore_package, "%.4f", total_time);
-	        fprintf(fff_power_psys, "%.4f", total_time);
+	fprintf(fff_energy_package, "%.4f", total_time);
+	fprintf(fff_energy_dram, "%.4f", total_time);
+	fprintf(fff_energy_pp0, "%.4f", total_time);
+	fprintf(fff_energy_pp1, "%.4f", total_time);
+       	fprintf(fff_energy_uncore_package, "%.4f", total_time);
+        fprintf(fff_energy_psys, "%.4f", total_time);
+	fprintf(fff_power_package, "%.4f", total_time);
+	fprintf(fff_power_dram, "%.4f", total_time);
+	fprintf(fff_power_pp0, "%.4f", total_time);
+	fprintf(fff_power_pp1, "%.4f", total_time);
+       	fprintf(fff_power_uncore_package, "%.4f", total_time);
+        fprintf(fff_power_psys, "%.4f", total_time);
 
-		tab_energy[0] = (char *) &total_time;
-		tab_power[0] = (char *) &total_time;
+	tab_energy[0] = (char *) &total_time;
+	tab_power[0] = (char *) &total_time;
+        energy_pkg0 = 0;
+        energy_pkg1 = 0;
+	energy_pp0_pkg0 = 0;
+        energy_pp0_pkg1 = 0;
 
         for (i=0; i<num_events; i++) {
             /* Energy consumption is returned in nano-Joules (nJ) */
@@ -488,8 +492,7 @@ int main (int argc, char **argv) {
 	    }
 	}
 
-	printf("Write\n");
-    	influxdb_write_serie(client, out_energy_package);
+    	/*influxdb_write_serie(client, out_energy_package);
     	influxdb_write_serie(client, out_energy_dram);
     	influxdb_write_serie(client, out_energy_pp0);
     	influxdb_write_serie(client, out_energy_pp1);
@@ -499,36 +502,36 @@ int main (int argc, char **argv) {
     	influxdb_write_serie(client, out_power_pp0);
     	influxdb_write_serie(client, out_power_pp1);
     	influxdb_write_serie(client, out_power_psys);
-    	//return status != 200;
-
-    	float uncore_energy, uncore_power;
+	*/
 
 	if (energy_pp0_pkg0 != 0) {
+	    //printf("energy_pkg0 %.3f, energy_pp0_pkg0 %.3f\n", energy_pkg0, energy_pp0_pkg0);
             fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg0 - energy_pp0_pkg0);
             fprintf(fff_power_uncore_package, ", %.3f", power_pkg0 - power_pp0_pkg0);
 
             uncore_energy = energy_pkg0 - energy_pp0_pkg0;
             uncore_power = power_pkg0 - power_pp0_pkg0;
-            memcpy(tab_energy[1],&uncore_energy,sizeof(uncore_energy));
-	    memcpy(tab_power[1],&uncore_power,sizeof(uncore_power));
+	    tab_energy[1] = (char *) &uncore_energy;
+	    tab_power[1] = (char *) &uncore_power;
             influxdb_series_add_points(out_energy_uncore_package, tab_energy);
 	    influxdb_series_add_points(out_power_uncore_package, tab_power);
         }
 
         if (energy_pp0_pkg1 != 0) {
+	    //printf("energy_pkg1 %.3f, energy_pp0_pkg1 %.3f\n", energy_pkg1, energy_pp0_pkg1);
             fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg1 - energy_pp0_pkg1);
             fprintf(fff_power_uncore_package, ", %.3f", power_pkg1 - power_pp0_pkg1);
 
             uncore_energy = energy_pkg1 - energy_pp0_pkg1;
             uncore_power = power_pkg1 - power_pp0_pkg1;
-            memcpy(tab_energy[1],&uncore_energy,sizeof(uncore_energy));
-   	    memcpy(tab_power[1],&uncore_power,sizeof(uncore_power));
+	    tab_energy[1] = (char *) &uncore_energy;
+            tab_power[1] = (char *) &uncore_power;
             influxdb_series_add_points(out_energy_uncore_package, tab_energy);
 	    influxdb_series_add_points(out_power_uncore_package, tab_power);
         }
         
-        influxdb_write_serie(client, out_energy_uncore_package);
-        influxdb_write_serie(client, out_power_uncore_package);
+        //influxdb_write_serie(client, out_energy_uncore_package);
+        //influxdb_write_serie(client, out_power_uncore_package);
         
         fprintf(fff_energy_package, "\n");
         fprintf(fff_energy_dram, "\n");

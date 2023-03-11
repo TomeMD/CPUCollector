@@ -23,12 +23,6 @@ RUN cd ${PAPI_HOME}/src && \
   ./configure --with-components="rapl" && \
   make
 
-# Compile RAPL dependencies
-COPY --chown=0 ./src/install-dependencies.sh ${RAPL_HOME}
-RUN cd ${RAPL_HOME} && \
-  chmod +x install-dependencies.sh && \
-  ./install-dependencies.sh
-
 # Compile RAPL tool
 COPY --chown=0 ./src/rapl_plot ${RAPL_SRC}
 RUN cd ${RAPL_SRC} && \

@@ -40,38 +40,36 @@ docker build -t myinfluxdb ./influxdb
 
 #### Despliegue de los contenedores
 
-Tras la crear las imágenes, se inician los contenedores de forma ordenada.
+Tras crear las imágenes, se inician los contenedores de forma ordenada.
 
 En primer lugar, se levanta el contenedor InfluxDB:
 
 ```shell
 docker run -d --name influxdb -p 8086:8086 --restart=unless-stopped \
 					-e "DOCKER_INFLUXDB_INIT_MODE=setup" \
-					-e "DOCKER_INFLUXDB_INIT_USERNAME=root" \
-					-e "DOCKER_INFLUXDB_INIT_PASSWORD=MyPassword" \
-					-e "DOCKER_INFLUXDB_INIT_ORG=tomemd" \
+					-e "DOCKER_INFLUXDB_INIT_USERNAME=admin" \
+					-e "DOCKER_INFLUXDB_INIT_PASSWORD=12345678" \
+					-e "DOCKER_INFLUXDB_INIT_ORG=MyOrg" \
 					-e "DOCKER_INFLUXDB_INIT_BUCKET=glances" \
 					-e "DOCKER_INFLUXDB_INIT_RETENTION=4w" \
 					-e "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=MyToken" \
 					-e "DOCKER_INFLUXDB_INIT_CLI_CONFIG_NAME=MyConfig" \
-					-v $PWD/influxdb/data:/var/lib/influxdb2 \
-					-v $PWD/influxdb/etc:/etc/influxdb2 \
+					-v ./influxdb/data:/var/lib/influxdb2 \
+					-v ./influxdb/etc:/etc/influxdb2 \
 					--network grafana_network myinfluxdb
 ```
-
-
 
 Ahora se levanta el contenedor Grafana:
 
 ```shell
-docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v $PWD/grafana/data:/var/lib/grafana -v $PWD/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources --network grafana_network grafana/grafana
+docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v ./grafana/data:/var/lib/grafana -v ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources --network grafana_network grafana/grafana
 ```
 
 Por último, se levantan los contenedores Glances y RAPL:
 
 Glances:
 ```shell
-docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 10" -v $PWD/glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
+docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 10" -v ./glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
 ```
 
 RAPL:
@@ -122,10 +120,7 @@ docker-compose down
 <a name="apptainer"></a>
 ## Despliegue con Apptainer
 
-El despliegue de los contenedores Glances, InfluxDB y Grafana se puede realizar de dos formas:
-
-- [Despliegue manual](#manual): Utilizando comandos Apptainer.
-- [Despliegue automatizado](#auto): Utilizando Singularity-Compose.
+El despliegue de los contenedores Glances, InfluxDB y Grafana se realizará de forma manual.
 
 ---
 <a name="manual"></a>
@@ -138,15 +133,15 @@ En primer lugar se crearán las imágenes y, tras ello, se ejecutarán las insta
 Inicialmente será necesario crear una imagen (fichero .sif) para los contenedores para los que sea necesario, en este caso, los contenedores RAPL, Glances e InfluxDB:
 
 ```shell
-apptainer build rapl.sif rapl.def
+cd rapl && apptainer build rapl.sif rapl.def && cd ..
 ```
 
 ```shell
-apptainer build glances/glances.sif glances/glances.def
+cd glances && apptainer build glances.sif glances.def && cd ..
 ```
 
 ```shell
-apptainer build influxdb/influxdb.sif influxdb/influxdb.def
+cd influxdb && apptainer build influxdb.sif influxdb.def && cd ..
 ```
 <br>
 
@@ -163,20 +158,19 @@ apptainer instance start --env-file influxdb/env/influxdb.env --bind ./influxdb/
 Ahora se levanta la instancia Grafana:
 
 ```shell
-apptainer instance start --bind ./grafana/data:/var/lib/grafana docker://grafana/grafana grafana
+apptainer instance start --bind ./grafana/data:/var/lib/grafana --bind ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources docker://grafana/grafana grafana
 ```
 
 Por último, se levantan las instancias Glances y RAPL:
 
 Glances:
 ```shell
-apptainer instance start -C --env "GLANCES_OPT=-q --export influxdb2 --time 10" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
+apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 10" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
 ```
 
 RAPL:
 ```shell
-#apptainer instance start --no-mount tmp --writable-tmpfs --add-caps cap_setfcap rapl.sif rapl
-apptainer instance start rapl.sif rapl
+apptainer instance start rapl/rapl.sif rapl
 ```
 
 Una vez desplegadas, si se quieren parar y eliminar las instancias:
@@ -186,20 +180,4 @@ apptainer instance stop rapl
 apptainer instance stop glances
 apptainer instance stop grafana
 apptainer instance stop influxdb
-```
-
----
-<a name="auto"></a>
-## Despliegue automatizado
-
-Para levantar las instancias de forma automatizada habrá que ejecutar:
-
-```shell
-singularity-compose up
-```
-
-Para parar y eliminar las instancias:
-
-```shell
-singularity-compose down
 ```

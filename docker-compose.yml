@@ -1,35 +1,6 @@
-version: "3.2"
-
 services:
-  glances:
-    image: glances
-    build:
-      context: ./glances
-    container_name: glances
-    restart: unless-stopped
-    environment:
-      - GLANCES_OPT=-q --export influxdb2 --time 10
-    pid: "host"
-    privileged: true
-    network_mode: "host"
-    depends_on:
-      - influxdb
-    volumes:
-      - ./glances/etc/glances.conf:/glances/conf/glances.conf
-
-  rapl:
-    image: rapl
-    build:
-      context: ./rapl
-    restart: unless-stopped
-    pid: "host"
-    privileged: true
-    network_mode: "host"
-    depends_on:
-      - influxdb
-
   influxdb:
-    image: myinfluxdb
+    image: influxdb
     build:
       context: ./influxdb
     container_name: influxdb
@@ -50,12 +21,14 @@ services:
     restart: unless-stopped
     ports:
       - 8080:3000
-    user: "472"
+    user: "${UID}:${GID}"
     volumes:
       - ./grafana/data:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
     networks:
       - grafana_network
+    depends_on:
+      - influxdb
 
 networks:
   grafana_network:

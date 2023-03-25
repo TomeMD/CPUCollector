@@ -1,48 +1,46 @@
-# Instrucciones de ejecución
-En función de nuestras preferencias, podemos desplegar los contenedores utilizando [Docker](#docker) o utilizando [Apptainer](#apptainer).
+# Glances + RAPL + InfluxDB +  Grafana
+Deployment of a container-based solution for monitoring power consumption and CPU load. Based on your preferences, you can deploy containers using  [Docker](#docker) or using [Apptainer](#apptainer).
 
 <a name="docker"></a>
-## Despliegue con Docker
 
-El despliegue de los contenedores Glances, InfluxDB y Grafana se puede realizar de dos formas:
+## Docker deployment
 
-- [Despliegue manual](#manual): Utilizando comandos Docker.
-- [Despliegue automatizado](#auto): Utilizando Docker-Compose.
+You can deploy Docker containers in the following two ways:
+
+- [Manual deployment](#manual): Running Docker commands.
+- [Automatic deployment](#auto): Running Docker-Compose.
 
 ---
 <a name="manual"></a>
-### Despliegue manual
-En primer lugar, se crearán las imágenes y, tras ello, se ejecutarán los contenedores que utilizan esas imágenes.
 
-<br>
+### Manual Deployment
+First the images must be created and then the containers must be executed.
 
-#### Construcción de las imágenes
-Inicialmente será necesario crear la red a través de la cuál se comunicarán InfluxDB y Grafana:
+#### Building images
+To begin with, it will be necessary to create the network that allows InfluxDB and Grafana containers to communicate
 
 ```shell
 docker network create -d bridge --opt com.docker.network.bridge.name=br_grafana grafana_network
 ```
 
-Y crear una imagen para los contenedores para los que sea necesario, en este caso, los contenedores RAPL, Glances e InfluxDB:
-
-```shell
-docker build -t rapl ./rapl
-```
+And create an image for the containers for which it is necessary (Glances, RAPL and InfluxDB):
 
 ```shell
 docker build -t glances ./glances
 ```
 
 ```shell
+docker build -t rapl ./rapl
+```
+
+```shell
 docker build -t myinfluxdb ./influxdb
 ```
-<br>
+#### Containers deployment
 
-#### Despliegue de los contenedores
+After creating the images, the containers are started in an ordered way.
 
-Tras crear las imágenes, se inician los contenedores de forma ordenada.
-
-En primer lugar, se levanta el contenedor InfluxDB:
+First, deploy InfluxDB:
 
 ```shell
 docker run -d --name influxdb -p 8086:8086 --restart=unless-stopped \
@@ -59,25 +57,23 @@ docker run -d --name influxdb -p 8086:8086 --restart=unless-stopped \
 					--network grafana_network myinfluxdb
 ```
 
-Ahora se levanta el contenedor Grafana:
+Now deploy Grafana, you must replace `<uid>:<gid>` by your UID and GID (on most systems you should be able to get them by running `id -u` and `id -g`):
 
 ```shell
-docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u 472 -v ./grafana/data:/var/lib/grafana -v ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources --network grafana_network grafana/grafana
+docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u <uid>:<gid> -v ./grafana/data:/var/lib/grafana -v ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources --network grafana_network grafana/grafana
 ```
 
-Por último, se levantan los contenedores Glances y RAPL:
+Finally, deploy Glances and RAPL containers:
 
-Glances:
 ```shell
 docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 10" -v ./glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
 ```
 
-RAPL:
 ```shell
 docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl
 ```
 
-Una vez desplegados, si se quieren parar los contenedores:
+Once deployed, if you want to stop the containers:
 
 ```shell
 docker stop rapl
@@ -86,7 +82,7 @@ docker stop grafana
 docker stop influxdb
 ```
 
-Una vez parados, si se quiere eliminar los contenedores de forma permanente:
+Once stopped, if you want to remove the containers permanently:
 
 ```shell
 docker rm rapl
@@ -97,83 +93,75 @@ docker rm influxdb
 
 ---
 <a name="auto"></a>
-## Despliegue automatizado
+## Automatic Deployment
 
-Para levantar los contenedores de forma automatizada simplemente habrá que ejecutar:
+First of all you must introduce your UID and GID in the .env file. Then you can deploy the containers by simply executing:
 
 ```shell
 docker-compose up -d
 ```
 
-Para parar los contenedores:
+To stop the containers:
 
 ```shell
 docker-compose stop
 ```
 
-Para parar y eliminar los contenedores:
+To stop and remove the containers:
 
 ```shell
 docker-compose down
 ```
 
 <a name="apptainer"></a>
-## Despliegue con Apptainer
+## Apptainer Deployment
 
-El despliegue de los contenedores Glances, InfluxDB y Grafana se realizará de forma manual.
+The deployment of containers using Apptainer will be done manually.
 
 ---
 <a name="manual"></a>
-### Despliegue manual
-En primer lugar se crearán las imágenes y, tras ello, se ejecutarán las instancias que utilizan esas imágenes.
 
-<br>
+### Manual Deployment
+First, you have to create the images and then you should create instances to run the containers in the background.
 
-#### Construcción de las imágenes
-Inicialmente será necesario crear una imagen (fichero .sif) para los contenedores para los que sea necesario, en este caso, los contenedores RAPL, Glances e InfluxDB:
-
-```shell
-cd rapl && apptainer build rapl.sif rapl.def && cd ..
-```
+#### Building images
+Initially it will be necessary to create an image (.sif file) for the containers for which it is necessary (Glances, RAPL and InfluxDB). In Apptainer you have to care about the directory from which you build the images:
 
 ```shell
 cd glances && apptainer build glances.sif glances.def && cd ..
 ```
 
 ```shell
+cd rapl && apptainer build rapl.sif rapl.def && cd ..
+```
+
+```shell
 cd influxdb && apptainer build influxdb.sif influxdb.def && cd ..
 ```
-<br>
+#### Instances deployment
 
-#### Ejecución de las instancias
-
-Para iniciar la ejecución de los contenedores en segundo plano debemos crear una instancia para cada contenedor.
-
-En primer lugar, se levanta la instancia InfluxDB:
+As well as in Docker, instances must be started in an ordered way. First, deploy InfluxDB:
 
 ```shell
 apptainer instance start --env-file influxdb/env/influxdb.env --bind ./influxdb/data:/var/lib/influxdb2 --bind ./influxdb/etc:/etc/influxdb2 influxdb/influxdb.sif influxdb
 ```
 
-Ahora se levanta la instancia Grafana:
+Now deploy Grafana:
 
 ```shell
 apptainer instance start --bind ./grafana/data:/var/lib/grafana --bind ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources docker://grafana/grafana grafana
 ```
 
-Por último, se levantan las instancias Glances y RAPL:
-
-Glances:
+Finally, deploy Glances and RAPL containers:
 ```shell
 apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 10" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
 ```
 
-RAPL:
 ```shell
 apptainer instance start rapl/rapl.sif rapl
 ```
 
-Una vez desplegadas, si se quieren parar y eliminar las instancias:
+Once deployed, if you want to stop and remove the instances:
 
 ```shell
 apptainer instance stop rapl

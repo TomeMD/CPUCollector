@@ -1,13 +1,13 @@
 [MyConfig]
   url = "http://localhost:8086"
   token = "MyToken"
-  org = "tomemd"
+  org = "MyOrg"
   active = true
 
 [default]
   url = "http://localhost:8086"
   token = "MyToken"
-  org = "tomemd"
+  org = "MyOrg"
   previous = true
 # 
 # [eu-central]

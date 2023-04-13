@@ -1,4 +1,31 @@
 services:
+  glances:
+    image: glances
+    build:
+      context: ./glances
+    container_name: glances
+    restart: unless-stopped
+    environment:
+      - GLANCES_OPT=-q --export influxdb2 --time 2
+    pid: "host"
+    privileged: true
+    network_mode: "host"
+    depends_on:
+      - influxdb
+    volumes:
+      - ./glances/etc/glances.conf:/glances/conf/glances.conf
+
+  rapl:
+    image: rapl
+    build:
+      context: ./rapl
+    restart: unless-stopped
+    pid: "host"
+    privileged: true
+    network_mode: "host"
+    depends_on:
+      - influxdb
+
   influxdb:
     image: influxdb
     build:

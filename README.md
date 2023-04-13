@@ -66,7 +66,7 @@ docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u <uid>:<gid
 Finally, deploy Glances and RAPL containers:
 
 ```shell
-docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 10" -v ./glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
+docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 2" -v ./glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
 ```
 
 ```shell
@@ -154,7 +154,7 @@ apptainer instance start --bind ./grafana/data:/var/lib/grafana --bind ./grafana
 
 Finally, deploy Glances and RAPL containers:
 ```shell
-apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 10" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
+apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" --bind ./glances/etc/glances.conf:/glances/conf/glances.conf glances/glances.sif glances
 ```
 
 ```shell

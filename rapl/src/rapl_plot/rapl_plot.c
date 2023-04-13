@@ -39,7 +39,7 @@ int main (int argc, char **argv) {
     FILE *fff_energy_package, *fff_energy_dram, *fff_energy_pp0, *fff_energy_pp1, *fff_energy_uncore_package, *fff_energy_psys;
     FILE *fff_power_package, *fff_power_dram, *fff_power_pp0, *fff_power_pp1, *fff_power_uncore_package, *fff_power_psys;
 
-    seconds_interval = 1;
+    seconds_interval = 2;
     max_time = 0;
 
     if (argc == 1) {

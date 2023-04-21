@@ -1,11 +1,14 @@
 Bootstrap: docker
-From: nicolargo/glances:latest-full
+From: nicolargo/glances:dev
 
 %files
 	etc/glances.conf /glances/conf/glances.conf
+	etc/glances_influxdb2.py /glances/glances/exports/glances_influxdb2.py
 
 %startscript
+	cd /glances
 	python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
 %runscript
+	cd /glances
 	python -m glances -C /glances/conf/glances.conf $GLANCES_OPT

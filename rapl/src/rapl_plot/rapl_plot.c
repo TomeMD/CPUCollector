@@ -27,6 +27,7 @@ int main (int argc, char **argv) {
     int num_events = 0;
     int EventSet = PAPI_NULL;
     long long values[MAX_EVENTS];
+    char hostname[1024], host_tag[1024+5];
     char event_name[BUFSIZ];
     PAPI_event_info_t evinfo;
     const PAPI_component_info_t *cmpinfo = NULL;
@@ -198,9 +199,16 @@ int main (int argc, char **argv) {
     fff_power_uncore_package=fopen(output_filename_power_uncore_package, "w");
     fff_power_psys=fopen(output_filename_power_psys, "w");
 
+    retval = gethostname(hostname, sizeof(hostname));
+    if (retval != 0) {
+        fprintf(stderr, "Error getting hostname\n");
+        exit(-1);
+    }
+    snprintf(host_tag, sizeof(host_tag), "host=%s", hostname);
+
     // Create InfluxDB Client
     ic_influx_database("localhost", 8086, "glances", "MyOrg", "MyToken");
-    ic_tags("host=rapl");
+    ic_tags(host_tag);
 
     if (fff_energy_package == NULL) {
 	fprintf(stderr, "Could not open fff_energy_package %s\n", output_filename_energy_package);

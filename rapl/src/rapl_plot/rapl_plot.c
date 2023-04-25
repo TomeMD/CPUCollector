@@ -33,63 +33,24 @@ int main (int argc, char **argv) {
     const PAPI_component_info_t *cmpinfo = NULL;
     long long start_time,before_time,after_time,offset_time;
     double elapsed_time,total_time;
-    size_t array_length;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
-    char* arg_filename;
-    FILE *fff_energy_package, *fff_energy_dram, *fff_energy_pp0, *fff_energy_pp1, *fff_energy_uncore_package, *fff_energy_psys;
-    FILE *fff_power_package, *fff_power_dram, *fff_power_pp0, *fff_power_pp1, *fff_power_uncore_package, *fff_power_psys;
 
     seconds_interval = 2;
     max_time = 0;
-
-    if (argc == 1) {
-    char *prefix = "out";
-    arg_filename = (char*)malloc(strlen(prefix)+1);
-    sprintf(arg_filename, "%s", prefix);
-    } else if (argc == 2) {
-        arg_filename = argv[1];
-    } else if (argc == 3) {
-        arg_filename = argv[1];
-    sscanf(argv[2], "%i", &seconds_interval);
-    } else if (argc == 4) {
-        arg_filename = argv[1];
-    sscanf(argv[2], "%i", &seconds_interval);
-        sscanf(argv[3], "%i", &max_time);
-    } else {
-    fprintf(stderr, "Usage: %s OUTPUT_PREFIX INTERVAL_SECONDS [MAX_TIME_SECONDS]\n", argv[0]);
-    exit(-1);
+    if (argc > 1) {
+        if (argc == 2) {
+        sscanf(argv[1], "%i", &seconds_interval);
+        } else if (argc == 3) {
+        sscanf(argv[1], "%i", &seconds_interval);
+                sscanf(argv[2], "%i", &max_time);
+        } else {
+        fprintf(stderr, "Usage: %s [INTERVAL_SECONDS MAX_TIME_SECONDS]\n", argv[0]);
+        exit(-1);
+        }
     }
 
     microseconds_interval = seconds_interval * 1e6;
-    array_length = strlen(arg_filename)+50;
-    char output_filename_energy_package[array_length],
-    output_filename_energy_dram[array_length],
-    output_filename_energy_pp0[array_length],
-    output_filename_energy_pp1[array_length],
-    output_filename_energy_uncore_package[array_length],
-    output_filename_energy_psys[array_length],
-    output_filename_power_package[array_length],
-    output_filename_power_dram[array_length],
-    output_filename_power_pp0[array_length],
-    output_filename_power_pp1[array_length],
-    output_filename_power_uncore_package[array_length],
-    output_filename_power_psys[array_length];
-
-    sprintf(output_filename_energy_package, "%s_energy_joules_package.csv", arg_filename);
-    sprintf(output_filename_energy_dram, "%s_energy_joules_dram.csv", arg_filename);
-    sprintf(output_filename_energy_pp0, "%s_energy_joules_pp0.csv", arg_filename);
-    sprintf(output_filename_energy_pp1, "%s_energy_joules_pp1.csv", arg_filename);
-    sprintf(output_filename_energy_uncore_package, "%s_energy_joules_uncore_package.csv", arg_filename);
-    sprintf(output_filename_energy_psys, "%s_energy_joules_psys.csv", arg_filename);
-    sprintf(output_filename_power_package, "%s_power_package.csv", arg_filename);
-    sprintf(output_filename_power_dram, "%s_power_dram.csv", arg_filename);
-    sprintf(output_filename_power_pp0, "%s_power_pp0.csv", arg_filename);
-    sprintf(output_filename_power_pp1, "%s_power_pp1.csv", arg_filename);
-    sprintf(output_filename_power_uncore_package, "%s_power_uncore_package.csv", arg_filename);
-    sprintf(output_filename_power_psys, "%s_power_psys.csv", arg_filename);
-
-    printf("Output prefix: %s\n", arg_filename);
     printf("Interval: %i s (%i us)\n", seconds_interval, microseconds_interval);
     printf("Max time: %i s\n", max_time);
 
@@ -185,20 +146,6 @@ int main (int argc, char **argv) {
 	}
     }
 
-    /* Open output files */
-    fff_energy_package=fopen(output_filename_energy_package, "w");
-    fff_energy_dram=fopen(output_filename_energy_dram, "w");
-    fff_energy_pp0=fopen(output_filename_energy_pp0, "w");
-    fff_energy_pp1=fopen(output_filename_energy_pp1, "w");
-    fff_energy_uncore_package=fopen(output_filename_energy_uncore_package, "w");
-    fff_energy_psys=fopen(output_filename_energy_psys, "w");
-    fff_power_package=fopen(output_filename_power_package, "w");
-    fff_power_dram=fopen(output_filename_power_dram, "w");
-    fff_power_pp0=fopen(output_filename_power_pp0, "w");
-    fff_power_pp1=fopen(output_filename_power_pp1, "w");
-    fff_power_uncore_package=fopen(output_filename_power_uncore_package, "w");
-    fff_power_psys=fopen(output_filename_power_psys, "w");
-
     retval = gethostname(hostname, sizeof(hostname));
     if (retval != 0) {
         fprintf(stderr, "Error getting hostname\n");
@@ -209,125 +156,6 @@ int main (int argc, char **argv) {
     // Create InfluxDB Client
     ic_influx_database("localhost", 8086, "glances", "MyOrg", "MyToken");
     ic_tags(host_tag);
-
-    if (fff_energy_package == NULL) {
-	fprintf(stderr, "Could not open fff_energy_package %s\n", output_filename_energy_package);
-	exit(-1);
-    }
-    if (fff_energy_dram == NULL) {
-	fprintf(stderr, "Could not open fff_energy_dram %s\n", output_filename_energy_dram);
-	exit(-1);
-    }
-    if (fff_energy_pp0 == NULL) {
-	fprintf(stderr, "Could not open fff_energy_pp0 %s\n", output_filename_energy_pp0);
-	exit(-1);
-    }
-    if (fff_energy_pp1 == NULL) {
-	fprintf(stderr, "Could not open fff_energy_pp1 %s\n", output_filename_energy_pp1);
-	exit(-1);
-    }
-    if (fff_energy_uncore_package == NULL) {
-	fprintf(stderr, "Could not open fff_energy_uncore_package %s\n", output_filename_energy_uncore_package);
-	exit(-1);
-    }
-    if (fff_energy_psys == NULL) {
-	fprintf(stderr, "Could not open fff_energy_psys %s\n", output_filename_energy_psys);
-	exit(-1);
-    }
-    if (fff_power_package == NULL) {
-	fprintf(stderr, "Could not open fff_power_package %s\n", output_filename_power_package);
-	exit(-1);
-    }
-    if (fff_power_dram == NULL) {
-	fprintf(stderr, "Could not open fff_power_dram %s\n", output_filename_power_dram);
-	exit(-1);
-    }
-    if (fff_power_pp0 == NULL) {
-	fprintf(stderr, "Could not open fff_power_pp0 %s\n", output_filename_power_pp0);
-	exit(-1);
-    }
-    if (fff_power_pp1 == NULL) {
-	fprintf(stderr, "Could not open fff_power_pp1 %s\n", output_filename_power_pp1);
-	exit(-1);
-    }
-    if (fff_power_uncore_package == NULL) {
-	fprintf(stderr, "Could not open fff_power_uncore_package %s\n", output_filename_power_uncore_package);
-	exit(-1);
-    }
-    if (fff_power_psys == NULL) {
-	fprintf(stderr, "Could not open fff_power_psys %s\n", output_filename_power_psys);
-	exit(-1);
-    }
-
-    /* Write file headers */
-    fprintf(fff_energy_package, "TIME(s)");
-    fprintf(fff_energy_dram, "TIME(s)");
-    fprintf(fff_energy_pp0, "TIME(s)");
-    fprintf(fff_energy_pp1, "TIME(s)");
-    fprintf(fff_energy_uncore_package, "TIME(s)");
-    fprintf(fff_energy_psys, "TIME(s)");
-    fprintf(fff_power_package, "TIME(s)");
-    fprintf(fff_power_dram, "TIME(s)");
-    fprintf(fff_power_pp0, "TIME(s)");
-    fprintf(fff_power_pp1, "TIME(s)");
-    fprintf(fff_power_uncore_package, "TIME(s)");
-    fprintf(fff_power_psys, "TIME(s)");
-
-    for (i=0; i<num_events; i++) {
-
-        if (strstr(events[i], "DRAM_")) {
-            fprintf(fff_energy_dram,", %s(J)", events[i]);
-            fprintf(fff_power_dram,", %s(W)", events[i]);
-        } else if (strstr(events[i], "PP0_")) {
-            fprintf(fff_energy_pp0,", %s(J)", events[i]);
-            fprintf(fff_power_pp0,", %s(W)", events[i]);
-        } else if (strstr(events[i], "PP1_")) {
-            fprintf(fff_energy_pp1,", %s(J)", events[i]);
-            fprintf(fff_power_pp1,", %s(W)", events[i]);
-        } else if (strstr(events[i], "PSYS_")) {
-            fprintf(fff_energy_psys,", %s(J)", events[i]);
-            fprintf(fff_power_psys,", %s(W)", events[i]);
-        } else if (strstr(events[i], "PACKAGE_")) {
-            fprintf(fff_energy_package,", %s(J)", events[i]);
-            fprintf(fff_power_package,", %s(W)", events[i]);
-            if (strstr(events[i], "PACKAGE0")) {
-                fprintf(fff_energy_uncore_package,", UNCORE_ENERGY:PACKAGE0(J)");
-                fprintf(fff_power_uncore_package,", UNCORE_POWER:PACKAGE0(W)");
-            }
-            if (strstr(events[i], "PACKAGE1")) {
-                fprintf(fff_energy_uncore_package,", UNCORE_ENERGY:PACKAGE1(J)");
-                fprintf(fff_power_uncore_package,", UNCORE_POWER:PACKAGE1(W)");
-            }
-        } else {
-            fprintf(stderr, "Error! Unexpected event %s found!\n", events[i]);
-        }
-    }
-
-    fprintf(fff_energy_package, "\n");
-    fprintf(fff_energy_dram, "\n");
-    fprintf(fff_energy_pp0, "\n");
-    fprintf(fff_energy_pp1, "\n");
-    fprintf(fff_energy_uncore_package, "\n");
-    fprintf(fff_energy_psys, "\n");
-    fprintf(fff_power_package, "\n");
-    fprintf(fff_power_dram, "\n");
-    fprintf(fff_power_pp0, "\n");
-    fprintf(fff_power_pp1, "\n");
-    fprintf(fff_power_uncore_package, "\n");
-    fprintf(fff_power_psys, "\n");
-
-    fflush(fff_energy_package);
-    fflush(fff_energy_dram);
-    fflush(fff_energy_pp0);
-    fflush(fff_energy_pp1);
-    fflush(fff_energy_uncore_package);
-    fflush(fff_energy_psys);
-    fflush(fff_power_package);
-    fflush(fff_power_dram);
-    fflush(fff_power_pp0);
-    fflush(fff_power_pp1);
-    fflush(fff_power_uncore_package);
-    fflush(fff_power_psys);
 
     printf("Starting measuring loop...\n");
     fflush(stdout);
@@ -364,19 +192,6 @@ int main (int argc, char **argv) {
 	total_time=((double)(after_time-start_time))/1.0e9;
 	elapsed_time=((double)(after_time-before_time))/1.0e9;
 
-	fprintf(fff_energy_package, "%.4f", total_time);
-	fprintf(fff_energy_dram, "%.4f", total_time);
-	fprintf(fff_energy_pp0, "%.4f", total_time);
-	fprintf(fff_energy_pp1, "%.4f", total_time);
-       	fprintf(fff_energy_uncore_package, "%.4f", total_time);
-        fprintf(fff_energy_psys, "%.4f", total_time);
-	fprintf(fff_power_package, "%.4f", total_time);
-	fprintf(fff_power_dram, "%.4f", total_time);
-	fprintf(fff_power_pp0, "%.4f", total_time);
-	fprintf(fff_power_pp1, "%.4f", total_time);
-       	fprintf(fff_power_uncore_package, "%.4f", total_time);
-        fprintf(fff_power_psys, "%.4f", total_time);
-
         energy_pkg0 = 0;
         energy_pkg1 = 0;
 	energy_pp0_pkg0 = 0;
@@ -400,13 +215,9 @@ int main (int argc, char **argv) {
 		continue;
 
             if (strstr(events[i], "DRAM_")) {
-                fprintf(fff_energy_dram, ", %.3f", energy);
-                fprintf(fff_power_dram, ", %.3f", power);
                 strcpy(measure_energy, "ENERGY_DRAM");
                 strcpy(measure_power, "POWER_DRAM");
             } else if (strstr(events[i], "PP0_")) {
-		fprintf(fff_energy_pp0, ", %.3f", energy);
-		fprintf(fff_power_pp0, ", %.3f", power);
                 strcpy(measure_energy, "ENERGY_PP0");
                 strcpy(measure_power, "POWER_PP0");
                  if (strstr(events[i], "PACKAGE0")) {
@@ -417,18 +228,12 @@ int main (int argc, char **argv) {
 	                 power_pp0_pkg1 = power;
                  }
             } else if (strstr(events[i], "PP1_")) {
-		fprintf(fff_energy_pp1, ", %.3f", energy);
-		fprintf(fff_power_pp1, ", %.3f", power);
                 strcpy(measure_energy, "ENERGY_PP1");
                 strcpy(measure_power, "POWER_PP1");
 	    } else if (strstr(events[i], "PSYS_")) {
-		fprintf(fff_energy_psys, ", %.3f", energy);
-		fprintf(fff_power_psys, ", %.3f", power);
                 strcpy(measure_energy, "ENERGY_PSYS");
                 strcpy(measure_power, "POWER_PSYS");
             } else if (strstr(events[i], "PACKAGE_")) {
-		fprintf(fff_energy_package, ", %.3f", energy);
-		fprintf(fff_power_package, ", %.3f", power);
                 strcpy(measure_energy, "ENERGY_PACKAGE");
                 strcpy(measure_power, "POWER_PACKAGE");
                 if (strstr(events[i], "PACKAGE0")) {
@@ -443,11 +248,9 @@ int main (int argc, char **argv) {
 	    }
 
             ic_measure(measure_energy);
-                ic_double("TIME(s)", total_time);
                 ic_double(column_joules, energy);
             ic_measureend();
             ic_measure(measure_power);
-                ic_double("TIME(s)", total_time);
                 ic_double(column_watts, power);
             ic_measureend();
             ic_push(); // Send metrics to InfluxDB
@@ -455,16 +258,12 @@ int main (int argc, char **argv) {
 
 	if (energy_pp0_pkg0 != 0) {
 	    //printf("energy_pkg0 %.3f, energy_pp0_pkg0 %.3f\n", energy_pkg0, energy_pp0_pkg0);
-            fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg0 - energy_pp0_pkg0);
-            fprintf(fff_power_uncore_package, ", %.3f", power_pkg0 - power_pp0_pkg0);
             ic_measure("UNCORE_ENERGY_PACKAGE");
-                ic_double("TIME(s)", total_time);
                 ic_double("UNCORE_ENERGY:PACKAGE0(J)", energy_pkg0 - energy_pp0_pkg0);
             ic_measureend();
 
             ic_measure("UNCORE_POWER_PACKAGE");
-                ic_double("TIME(s)", total_time);
-                ic_double("UNCORE_POWER:PACKAGE0(J)", power_pkg0 - power_pp0_pkg0);
+                ic_double("UNCORE_POWER:PACKAGE0(W)", power_pkg0 - power_pp0_pkg0);
             ic_measureend();
 
             ic_push();
@@ -472,66 +271,23 @@ int main (int argc, char **argv) {
 
         if (energy_pp0_pkg1 != 0) {
 	    //printf("energy_pkg1 %.3f, energy_pp0_pkg1 %.3f\n", energy_pkg1, energy_pp0_pkg1);
-            fprintf(fff_energy_uncore_package, ", %.3f", energy_pkg1 - energy_pp0_pkg1);
-            fprintf(fff_power_uncore_package, ", %.3f", power_pkg1 - power_pp0_pkg1);
-
             ic_measure("UNCORE_ENERGY_PACKAGE");
-                ic_double("TIME(s)", total_time);
+                //ic_double("TIME(s)", total_time);
                 ic_double("UNCORE_ENERGY:PACKAGE1(J)", energy_pkg1 - energy_pp0_pkg1);
             ic_measureend();
 
             ic_measure("UNCORE_POWER_PACKAGE");
-                ic_double("TIME(s)", total_time);
-                ic_double("UNCORE_POWER:PACKAGE1(J)", power_pkg1 - power_pp0_pkg1);
+                //ic_double("TIME(s)", total_time);
+                ic_double("UNCORE_POWER:PACKAGE1(W)", power_pkg1 - power_pp0_pkg1);
             ic_measureend();
 
             ic_push();
         }
 
-        fprintf(fff_energy_package, "\n");
-        fprintf(fff_energy_dram, "\n");
-        fprintf(fff_energy_pp0, "\n");
-        fprintf(fff_energy_pp1, "\n");
-        fprintf(fff_energy_uncore_package, "\n");
-        fprintf(fff_energy_psys, "\n");
-        fprintf(fff_power_package, "\n");
-        fprintf(fff_power_dram, "\n");
-        fprintf(fff_power_pp0, "\n");
-        fprintf(fff_power_pp1, "\n");
-        fprintf(fff_power_uncore_package, "\n");
-        fprintf(fff_power_psys, "\n");
-
-        fflush(fff_energy_package);
-        fflush(fff_energy_dram);
-        fflush(fff_energy_pp0);
-        fflush(fff_energy_pp1);
-        fflush(fff_energy_uncore_package);
-        fflush(fff_energy_psys);
-        fflush(fff_power_package);
-        fflush(fff_power_dram);
-        fflush(fff_power_pp0);
-        fflush(fff_power_pp1);
-        fflush(fff_power_uncore_package);
-        fflush(fff_power_psys);
-
         if (max_time > 0 && total_time >= max_time)
             break;
     }
 
-    printf("Finished loop. Total running time: %.4f s\n", total_time);
-
-    fclose(fff_energy_package);
-    fclose(fff_energy_dram);
-    fclose(fff_energy_pp0);
-    fclose(fff_energy_pp1);
-    fclose(fff_energy_uncore_package);
-    fclose(fff_energy_psys);
-    fclose(fff_power_package);
-    fclose(fff_power_dram);
-    fclose(fff_power_pp0);
-    fclose(fff_power_pp1);
-    fclose(fff_power_uncore_package);
-    fclose(fff_power_psys);
-    
+    printf("Finished loop. Total running time: %.4f s\n", total_time);    
     exit(0);
 }

@@ -1,13 +1,13 @@
 Bootstrap: docker
-From: nicolargo/glances:dev
+From: nicolargo/glances:latest-full
 
 %files
 	etc/glances.conf /glances/conf/glances.conf
 
 %startscript
-    cd /glances
-	python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+    cd /app
+	/venv/bin/python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT
 
 %runscript
-    cd /glances
-	python -m glances -C /glances/conf/glances.conf $GLANCES_OPT
+    cd /app
+	/venv/bin/python3 -m glances -C /glances/conf/glances.conf $GLANCES_OPT

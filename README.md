@@ -1,4 +1,4 @@
-# Glances + RAPL + InfluxDB +  Grafana
+# Glances + CPUfreq + RAPL + InfluxDB +  Grafana
 Deployment of a container-based solution for monitoring power consumption and CPU load and frequency. Based on your preferences, you can deploy containers using  [Docker](#docker) or using [Apptainer](#apptainer).
 
 <a name="docker"></a>

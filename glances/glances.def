@@ -3,7 +3,6 @@ From: nicolargo/glances:latest-full
 
 %files
 	etc/glances.conf /etc/glances.conf
-	etc/glances_export.py /app/glances/exports/glances_export.py
 
 %startscript
     cd /app

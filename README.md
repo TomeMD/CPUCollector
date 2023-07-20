@@ -1,5 +1,5 @@
 # Glances + RAPL + InfluxDB +  Grafana
-Deployment of a container-based solution for monitoring power consumption and CPU load. Based on your preferences, you can deploy containers using  [Docker](#docker) or using [Apptainer](#apptainer).
+Deployment of a container-based solution for monitoring power consumption and CPU load and frequency. Based on your preferences, you can deploy containers using  [Docker](#docker) or using [Apptainer](#apptainer).
 
 <a name="docker"></a>
 
@@ -23,10 +23,14 @@ To begin with, it will be necessary to create the network that allows InfluxDB a
 docker network create -d bridge --opt com.docker.network.bridge.name=br_grafana grafana_network
 ```
 
-And create an image for the containers for which it is necessary (Glances, RAPL and InfluxDB):
+And create an image for the containers for which it is necessary (Glances, CPUfreq, RAPL and InfluxDB):
 
 ```shell
 docker build -t glances ./glances
+```
+
+```shell
+docker build -t cpufreq ./cpufreq
 ```
 
 ```shell
@@ -36,6 +40,7 @@ docker build -t rapl ./rapl
 ```shell
 docker build -t myinfluxdb ./influxdb
 ```
+
 #### Containers deployment
 
 After creating the images, the containers are started in an ordered way.
@@ -63,10 +68,14 @@ Now deploy Grafana, you must replace `<uid>:<gid>` by your UID and GID (on most 
 docker run -d --name grafana -p 8080:3000 --restart=unless-stopped -u <uid>:<gid> -v ./grafana/data:/var/lib/grafana -v ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources --network grafana_network grafana/grafana
 ```
 
-Finally, deploy Glances and RAPL containers:
+Finally, deploy Glances, CPUfreq and RAPL containers:
 
 ```shell
-docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 2" -v ./glances/etc/glances.conf:/glances/conf/glances.conf nicolargo/glances:latest-full
+docker run -d --name glances --pid host --privileged --network host --restart=unless-stopped -e GLANCES_OPT="-q --export influxdb2 --time 2" glances
+```
+
+```shell
+docker run -d --name cpufreq --pid host --privileged --network host --restart=unless-stopped cpufreq
 ```
 
 ```shell
@@ -77,6 +86,7 @@ Once deployed, if you want to stop the containers:
 
 ```shell
 docker stop rapl
+docker stop cpufreq
 docker stop glances
 docker stop grafana
 docker stop influxdb
@@ -86,6 +96,7 @@ Once stopped, if you want to remove the containers permanently:
 
 ```shell
 docker rm rapl
+docker rm cpufreq
 docker rm glances
 docker rm grafana
 docker rm influxdb

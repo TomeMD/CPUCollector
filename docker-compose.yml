@@ -12,8 +12,18 @@ services:
     network_mode: "host"
     depends_on:
       - influxdb
-    volumes:
-      - ./glances/etc/glances.conf:/glances/conf/glances.conf
+
+  cpufreq:
+    image: cpufreq
+    build:
+      context: ./cpufreq
+    container_name: cpufreq
+    restart: unless-stopped
+    pid: "host"
+    privileged: true
+    network_mode: "host"
+    depends_on:
+      - influxdb
 
   rapl:
     image: rapl

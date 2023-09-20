@@ -208,8 +208,8 @@ int main (int argc, char **argv) {
             strcpy(column_watts, events[i]);
             strcat(column_watts, "(W)");
 
-            printf("events[%i]=%s, values[%i]=%lli\n", i, events[i], i, values[i]);
-            printf("Energy %.3f, Power %.3f\n", energy, power);
+            //printf("events[%i]=%s, values[%i]=%lli\n", i, events[i], i, values[i]);
+            //printf("Energy %.3f, Power %.3f\n", energy, power);
 
 	    if (energy == 0)
 		continue;
@@ -272,12 +272,10 @@ int main (int argc, char **argv) {
         if (energy_pp0_pkg1 != 0) {
 	    //printf("energy_pkg1 %.3f, energy_pp0_pkg1 %.3f\n", energy_pkg1, energy_pp0_pkg1);
             ic_measure("UNCORE_ENERGY_PACKAGE");
-                //ic_double("TIME(s)", total_time);
                 ic_double("UNCORE_ENERGY:PACKAGE1(J)", energy_pkg1 - energy_pp0_pkg1);
             ic_measureend();
 
             ic_measure("UNCORE_POWER_PACKAGE");
-                //ic_double("TIME(s)", total_time);
                 ic_double("UNCORE_POWER:PACKAGE1(W)", power_pkg1 - power_pp0_pkg1);
             ic_measureend();
 

@@ -154,7 +154,7 @@ int main (int argc, char **argv) {
     snprintf(host_tag, sizeof(host_tag), "host=%s", hostname);
 
     // Create InfluxDB Client
-    ic_influx_database("localhost", 8086, "glances", "MyOrg", "MyToken");
+    ic_influx_database("montoxo.des.udc.es", 8086, "glances", "MyOrg", "MyToken");
     ic_tags(host_tag);
 
     printf("Starting measuring loop...\n");

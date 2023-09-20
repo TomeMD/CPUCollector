@@ -4,14 +4,19 @@ while true; do
     # Get active cores
     ACTIVE_CORES=$(mpstat -P ALL 1 1 | awk '/Average/ && $2 !~ /^(CPU|all)$/ && $NF < 50 {print $2}')
 
+    if [ -z "$ACTIVE_CORES" ]; then
+        continue
+    fi
+
     # Get average frequency from active cores
     SUM=0
     COUNT=0
     for CORE in ${ACTIVE_CORES[@]}; do
-        FREQ=$(cat "/sys/devices/system/cpu/cpu${CORE}/cpufreq/scaling_cur_freq")
+        FREQ=$(<"/sys/devices/system/cpu/cpu${CORE}/cpufreq/scaling_cur_freq")
         SUM=$((SUM + FREQ))
         COUNT=$((COUNT + 1))
     done
+
     AVERAGE=$((SUM / COUNT / 1000))
 
     # Send data to InfluxDB

@@ -2,7 +2,7 @@
 
 while true; do
     # Get active cores
-    ACTIVE_CORES=$(mpstat -P ALL 1 1 | awk '/Average/ && $2 !~ /^(CPU|all)$/ && $NF < 50 {print $2}')
+    ACTIVE_CORES=$(mpstat -P ALL 1 1 | awk '/Average|Media/ && $2 !~ /^(CPU|all)$/ && $NF < 50 {print $2}')
 
     if [ -z "$ACTIVE_CORES" ]; then
         continue

@@ -33,5 +33,5 @@ while true; do
     # Send data to InfluxDB
     TIMESTAMP=$(date +%s%N)
     DATA="cpu_frequency mpstat_average=${ACTIVE_AVERAGE},mpstat_sum=${ACTIVE_SUM},mpstat_count=${ACTIVE_COUNT},total_average=${AVERAGE} ${TIMESTAMP}"
-    #curl -s -XPOST "http://montoxo.des.udc.es:8086/api/v2/write?org=MyOrg&bucket=glances" --header "Authorization: Token MyToken" --data-binary "${DATA}"
+    curl -s -XPOST "http://montoxo.des.udc.es:8086/api/v2/write?org=MyOrg&bucket=glances" --header "Authorization: Token MyToken" --data-binary "${DATA}"
 done

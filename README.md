@@ -74,12 +74,6 @@ docker run -d --name glances --pid host --privileged --network host --restart=un
 docker run -d --name rapl --pid host --privileged --network host --restart=unless-stopped rapl
 ```
 
-And execute CPUFreq script:
-
-```shell
-./cpufreq/get-freq.sh &
-```
-
 Once deployed, if you want to stop the containers:
 
 ```shell
@@ -166,12 +160,6 @@ apptainer instance start --env "GLANCES_OPT=-q --export influxdb2 --time 2" glan
 
 ```shell
 apptainer instance start rapl/rapl.sif rapl
-```
-
-And execute CPUFreq script:
-
-```shell
-./cpufreq/get-freq.sh &
 ```
 
 Once deployed, if you want to stop and remove the instances:

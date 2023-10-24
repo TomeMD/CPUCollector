@@ -27,6 +27,7 @@ int main (int argc, char **argv) {
     int num_events = 0;
     int EventSet = PAPI_NULL;
     long long values[MAX_EVENTS];
+    char influxdb_host[100], influxdb_bucket[100];
     char hostname[1024], host_tag[1024+5];
     char event_name[BUFSIZ];
     PAPI_event_info_t evinfo;
@@ -35,17 +36,28 @@ int main (int argc, char **argv) {
     double elapsed_time,total_time;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
+    influxdb_host = montoxo.des.udc.es
+    influxdb_bucket = "glances"
 
     seconds_interval = 2;
     max_time = 0;
     if (argc > 1) {
         if (argc == 2) {
-        sscanf(argv[1], "%i", &seconds_interval);
+        sscanf(argv[1], "%s", influxdb_host);
         } else if (argc == 3) {
+        sscanf(argv[1], "%s", influxdb_host);
+        sscanf(argv[2], "%s", influxdb_bucket);
+        } else if (argc == 4) {
+        sscanf(argv[1], "%s", influxdb_host);
+        sscanf(argv[2], "%s", influxdb_bucket);
         sscanf(argv[1], "%i", &seconds_interval);
-                sscanf(argv[2], "%i", &max_time);
+        } else if (argc == 5) {
+        sscanf(argv[1], "%s", influxdb_host);
+        sscanf(argv[2], "%s", influxdb_bucket);
+        sscanf(argv[1], "%i", &seconds_interval);
+        sscanf(argv[2], "%i", &max_time);
         } else {
-        fprintf(stderr, "Usage: %s [INTERVAL_SECONDS MAX_TIME_SECONDS]\n", argv[0]);
+        fprintf(stderr, "Usage: %s [INFLUXDB_HOST INFLUXDB_BUCKET INTERVAL_SECONDS MAX_TIME_SECONDS]\n", argv[0]);
         exit(-1);
         }
     }
@@ -154,7 +166,7 @@ int main (int argc, char **argv) {
     snprintf(host_tag, sizeof(host_tag), "host=%s", hostname);
 
     // Create InfluxDB Client
-    ic_influx_database("montoxo.des.udc.es", 8086, "glances", "MyOrg", "MyToken");
+    ic_influx_database(influxdb_host, 8086, influxdb_bucket, "MyOrg", "MyToken");
     ic_tags(host_tag);
 
     printf("Starting measuring loop...\n");

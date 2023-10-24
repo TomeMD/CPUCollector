@@ -3,11 +3,10 @@ From: nicolargo/glances:latest-full
 
 %files
 	etc/glances.conf /etc/glances.conf
+    start-glances.sh /usr/local/bin/glances/
 
 %startscript
-    cd /app
-	/venv/bin/python3 -m glances -C /etc/glances.conf $GLANCES_OPT
+	/usr/local/bin/glances/start-glances.sh "$@"
 
 %runscript
-    cd /app
-	/venv/bin/python3 -m glances -C /etc/glances.conf $GLANCES_OPT
+	/usr/local/bin/glances/start-glances.sh "$@"

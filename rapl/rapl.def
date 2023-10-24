@@ -44,7 +44,7 @@ Stage: final
   /var/lib/rapl/rapl_plot/rapl_plot /usr/local/bin
 
 %runscript
-  /usr/local/bin/rapl_plot
+  /usr/local/bin/rapl_plot "$@"
 
 %startscript
-  /usr/local/bin/rapl_plot
+  /usr/local/bin/rapl_plot "$@"

@@ -36,7 +36,7 @@ int main (int argc, char **argv) {
     double elapsed_time,total_time;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
-    influxdb_host = montoxo.des.udc.es
+    influxdb_host = "montoxo.des.udc.es"
     influxdb_bucket = "glances"
 
     seconds_interval = 2;

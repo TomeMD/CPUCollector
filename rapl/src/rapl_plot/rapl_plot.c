@@ -27,7 +27,8 @@ int main (int argc, char **argv) {
     int num_events = 0;
     int EventSet = PAPI_NULL;
     long long values[MAX_EVENTS];
-    char influxdb_host[100], influxdb_bucket[100];
+    char influxdb_host[100] = "montoxo.des.udc.es";
+    char influxdb_bucket[100] = "glances";
     char hostname[1024], host_tag[1024+5];
     char event_name[BUFSIZ];
     PAPI_event_info_t evinfo;
@@ -36,8 +37,6 @@ int main (int argc, char **argv) {
     double elapsed_time,total_time;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
-    influxdb_host = "montoxo.des.udc.es"
-    influxdb_bucket = "glances"
 
     seconds_interval = 2;
     max_time = 0;

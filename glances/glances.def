@@ -2,11 +2,10 @@ Bootstrap: docker
 From: nicolargo/glances:latest-full
 
 %files
-	etc/glances.conf /etc/glances.conf
-    start-glances.sh /usr/local/bin/glances/
+	start-glances.sh /usr/local/bin/
 
 %startscript
-	/usr/local/bin/glances/start-glances.sh "$@"
+	/usr/local/bin/start-glances.sh "$@"
 
 %runscript
-	/usr/local/bin/glances/start-glances.sh "$@"
+	/usr/local/bin/start-glances.sh "$@"

@@ -33,7 +33,7 @@ int main (int argc, char **argv) {
     char event_name[BUFSIZ];
     PAPI_event_info_t evinfo;
     const PAPI_component_info_t *cmpinfo = NULL;
-    long long start_time,before_time,after_time,offset_time;
+    long long start_time,before_time,after_time;
     double elapsed_time,total_time;
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
@@ -49,12 +49,12 @@ int main (int argc, char **argv) {
         } else if (argc == 4) {
         sscanf(argv[1], "%s", influxdb_host);
         sscanf(argv[2], "%s", influxdb_bucket);
-        sscanf(argv[1], "%i", &seconds_interval);
+        sscanf(argv[3], "%i", &seconds_interval);
         } else if (argc == 5) {
         sscanf(argv[1], "%s", influxdb_host);
         sscanf(argv[2], "%s", influxdb_bucket);
-        sscanf(argv[1], "%i", &seconds_interval);
-        sscanf(argv[2], "%i", &max_time);
+        sscanf(argv[3], "%i", &seconds_interval);
+        sscanf(argv[4], "%i", &max_time);
         } else {
         fprintf(stderr, "Usage: %s [INFLUXDB_HOST INFLUXDB_BUCKET INTERVAL_SECONDS MAX_TIME_SECONDS]\n", argv[0]);
         exit(-1);
@@ -189,8 +189,7 @@ int main (int argc, char **argv) {
 		exit(-1);
 	}
 
-	offset_time=(PAPI_get_real_nsec() - after_time)/1000 + 50;
-	usleep(microseconds_interval - offset_time);
+	usleep(microseconds_interval);
 
 	/* Stop counting */
 	after_time=PAPI_get_real_nsec();

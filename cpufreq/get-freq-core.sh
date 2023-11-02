@@ -23,5 +23,5 @@ while true; do
     TIMESTAMP=$(date +%s%N)
     DATA="cpu_frequency average=${AVERAGE},sum=${SUM} ${TIMESTAMP}"
     curl -s -XPOST "http://${INFLUXDB_HOST}:8086/api/v2/write?org=MyOrg&bucket=${INFLUXDB_BUCKET}" --header "Authorization: Token MyToken" --data-binary "${DATA}"
-    sleep 1
+    sleep 5
 done

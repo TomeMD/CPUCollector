@@ -38,7 +38,7 @@ int main (int argc, char **argv) {
     char events[MAX_EVENTS][BUFSIZ];
     char units[MAX_EVENTS][BUFSIZ];
 
-    seconds_interval = 5;
+    seconds_interval = 1;
     max_time = 0;
     if (argc > 1) {
         if (argc == 2) {

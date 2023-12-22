@@ -18,6 +18,7 @@ while true; do
       SUM=$((SUM + FREQ))
     done
     AVERAGE=$((SUM / ${#CORES_ARRAY[@]} / 1000))
+    SUM=$((SUM / 1000))
 
     # Send data to InfluxDB
     TIMESTAMP=$(date +%s%N)
